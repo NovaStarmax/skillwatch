@@ -10,3 +10,4 @@ dist/
 *.jar
 derby.log
 metastore_db/
+.ds_store
