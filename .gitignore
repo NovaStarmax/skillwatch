@@ -11,3 +11,4 @@ dist/
 derby.log
 metastore_db/
 .ds_store
+data/unmatched.log
