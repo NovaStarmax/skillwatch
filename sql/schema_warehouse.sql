@@ -54,6 +54,16 @@ CREATE TABLE IF NOT EXISTS training_skills (
     PRIMARY KEY (training_id, skill_id)
 );
 
+CREATE TABLE IF NOT EXISTS market_summary (
+    id SERIAL PRIMARY KEY,
+    skill_id INTEGER REFERENCES skills(id) ON DELETE CASCADE UNIQUE,
+    job_offer_count INTEGER DEFAULT 0,
+    developer_usage_count INTEGER DEFAULT 0,
+    avg_salary_eur NUMERIC,
+    training_count INTEGER DEFAULT 0,
+    computed_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,

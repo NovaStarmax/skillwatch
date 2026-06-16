@@ -3,6 +3,11 @@ import time
 
 from dotenv import load_dotenv
 
+from src.extract.demographics import run as run_demographics
+from src.extract.france_travail import run as run_france_travail
+from src.extract.stackoverflow_latest import run as run_stackoverflow
+from src.extract.stackoverflow_spark import run as run_spark
+from src.extract.openclassrooms import run as run_openclassrooms
 from src.utils.logger import get_logger
 
 load_dotenv()
@@ -10,22 +15,63 @@ load_dotenv()
 logger = get_logger("pipeline")
 
 STEPS = ["extract", "transform", "load", "all"]
-SOURCES = ["france_travail", "stackoverflow", "openclassrooms", "spark", "all"]
+SOURCES = ["france_travail", "stackoverflow", "openclassrooms", "spark", "demographics", "all"]
+
+EXTRACT_RUNNERS = [
+    ("demographics", run_demographics),
+    ("france_travail", run_france_travail),
+    ("stackoverflow", run_stackoverflow),
+    ("spark", run_spark),
+    ("openclassrooms", run_openclassrooms),
+]
+
+SOURCE_MAP = {name: fn for name, fn in EXTRACT_RUNNERS}
+
+
+def run_transform() -> None:
+    from src.transform.normalizer import run as run_normalizer
+    run_normalizer()
+
+
+def _run_extractor(name: str, fn, dry_run: bool) -> None:
+    logger.info(f"[PIPELINE] Démarrage | step=extract | source={name}")
+    if dry_run:
+        logger.info(f"[PIPELINE] dry-run | source={name} | durée=0.0s")
+        return
+    start = time.time()
+    fn()
+    duration = round(time.time() - start, 1)
+    logger.info(f"[PIPELINE] Terminé | source={name} | durée={duration}s")
 
 
 def run_step(step: str, source: str, dry_run: bool) -> None:
-    steps = [step] if step != "all" else ["extract", "transform", "load"]
-    sources = [source] if source != "all" else ["france_travail", "stackoverflow", "openclassrooms", "spark"]
+    if step == "all":
+        for name, fn in EXTRACT_RUNNERS:
+            _run_extractor(name, fn, dry_run)
+        logger.info("[PIPELINE] Démarrage | step=transform")
+        if not dry_run:
+            run_transform()
+        else:
+            logger.info("[PIPELINE] dry-run | step=transform | durée=0.0s")
+        return
 
-    for s in steps:
-        for src in sources:
-            logger.info(f"[PIPELINE] Démarrage | step={s} | source={src}")
-            if not dry_run:
-                start = time.time()
-                duration = round(time.time() - start, 1)
-                logger.info(f"[PIPELINE] Not implemented yet | durée={duration}s")
-            else:
-                logger.info("[PIPELINE] Not implemented yet | durée=0.0s")
+    if step == "extract":
+        if source == "all":
+            for name, fn in EXTRACT_RUNNERS:
+                _run_extractor(name, fn, dry_run)
+        else:
+            _run_extractor(source, SOURCE_MAP[source], dry_run)
+        return
+
+    if step == "transform":
+        logger.info("[PIPELINE] Démarrage | step=transform")
+        if not dry_run:
+            run_transform()
+        else:
+            logger.info("[PIPELINE] dry-run | step=transform | durée=0.0s")
+        return
+
+    logger.info(f"[PIPELINE] step={step} | Not implemented yet")
 
 
 def main() -> None:

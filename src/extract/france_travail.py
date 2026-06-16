@@ -243,9 +243,12 @@ def run() -> None:
 
             # Matching skills
             offer_text = f"{title} {description}".lower()
+            offer_tokens = set(re.split(r'[\s\-/;,.()\[\]]+', offer_text))
             matched: list[str] = []
             for alias, canonical in mapping.items():
-                if alias in offer_text and canonical not in matched:
+                # Single-word aliases: token exact match; multi-word: substring (preserves "spring boot" etc.)
+                hit = alias in offer_tokens if " " not in alias else alias in offer_text
+                if hit and canonical not in matched:
                     matched.append(canonical)
 
             if matched:

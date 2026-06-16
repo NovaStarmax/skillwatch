@@ -77,7 +77,11 @@ def run() -> None:
     def match_skill(raw_value: str | None) -> str | None:
         if not raw_value:
             return None
-        return mapping.get(raw_value.strip().lower())
+        tokens = {t.strip().lower() for t in raw_value.split(";") if t.strip()}
+        for alias, canonical in mapping.items():
+            if alias in tokens:
+                return canonical
+        return None
 
     from pyspark.sql.functions import udf
     match_skill_udf = udf(match_skill, StringType())
