@@ -75,20 +75,18 @@ def run() -> None:
             continue
 
         for idx, raw_val in df[col].dropna().items():
-            for token in str(raw_val).split(";"):
-                normalized = token.strip().lower()
-                if not normalized:
-                    continue
-                if normalized in mapping:
-                    skill_respondents[mapping[normalized]].add(idx)
-                else:
-                    if normalized not in unmatched_seen:
-                        unmatched_seen.add(normalized)
-                        with open(UNMATCHED_LOG, "a", encoding="utf-8") as f:
-                            f.write(
-                                f"[UNMATCHED] source: stackoverflow | col: {col} | value: {normalized}\n"
-                            )
-                        unmatched_count += 1
+            row_tokens = {t.strip().lower() for t in str(raw_val).split(";") if t.strip()}
+            for alias, canonical in mapping.items():
+                if alias in row_tokens:
+                    skill_respondents[canonical].add(idx)
+            for token in row_tokens:
+                if token not in mapping and token not in unmatched_seen:
+                    unmatched_seen.add(token)
+                    with open(UNMATCHED_LOG, "a", encoding="utf-8") as f:
+                        f.write(
+                            f"[UNMATCHED] source: stackoverflow | col: {col} | value: {token}\n"
+                        )
+                    unmatched_count += 1
 
     logger.info(f"[STACKOVERFLOW] {len(skill_respondents)} skills uniques détectés")
 
