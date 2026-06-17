@@ -66,3 +66,26 @@ UPDATE skills SET category = 'tool' WHERE name IN (
   'GLPI','Nagios','Cisco Packet Tracer','OCS Inventory','VirtualBox',
   'Windows','Windows Server','Active Directory'
 );
+
+UPDATE skills SET category = 'language' WHERE name IN (
+  'SQL','Assembly','COBOL','Delphi','Erlang','F#','Fortran',
+  'GDScript','Gleam','Lisp','Lua','MicroPython','Mojo','OCaml',
+  'Prolog','VBA','Visual Basic','Zig'
+);
+UPDATE skills SET category = 'framework' WHERE name IN (
+  'Axum','Blazor','Drupal','Fastify','Phoenix'
+);
+UPDATE skills SET category = 'database' WHERE name IN (
+  'CockroachDB','Cosmos DB','Datomic','DuckDB','Firestore',
+  'H2','IBM Db2','Microsoft Access','Oracle','PocketBase','Valkey'
+);
+UPDATE skills SET category = 'devops' WHERE name IN (
+  'New Relic'
+);
+UPDATE skills SET category = 'cloud' WHERE name IN (
+  'Railway','Yandex Cloud'
+);
+UPDATE skills SET category = 'tool' WHERE name IN (
+  'Bun','Chocolatey','Composer','Deno','Homebrew',
+  'MSBuild','Ninja','NuGet','Pacman','pip','pnpm','Poetry','Vite'
+);
