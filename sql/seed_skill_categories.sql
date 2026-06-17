@@ -35,3 +35,34 @@ UPDATE skills SET category = 'tool' WHERE name IN (
   'Power BI','Tableau','dbt','Git','npm','Yarn',
   'Webpack','Gradle','Maven','Pip','Cargo'
 );
+
+UPDATE skills SET category = 'language' WHERE name IN (
+  'XML','YAML'
+);
+UPDATE skills SET category = 'framework' WHERE name IN (
+  'Redux','Sass','JUnit','Jetpack Compose','Retrofit',
+  'Core Data','UIKit','Twig','Doctrine','.NET','LINQ',
+  'Django REST Framework','Pydantic','Tailwind CSS','Prisma'
+);
+UPDATE skills SET category = 'ml' WHERE name IN (
+  'Matplotlib','Seaborn','Mistral AI','ChatGPT',
+  'Computer Vision','Deep Learning','MLOps','NLP',
+  'Streamlit','BentoML'
+);
+UPDATE skills SET category = 'bigdata' WHERE name IN (
+  'Airbyte','Kestra','PySpark','Redpanda'
+);
+UPDATE skills SET category = 'devops' WHERE name IN (
+  'GitHub','GitLab','GitLab CI','CircleCI',
+  'CI/CD','Docker Compose','SonarQube'
+);
+UPDATE skills SET category = 'tool' WHERE name IN (
+  'Jupyter','Looker Studio','Excel','KNIME','R Markdown',
+  'VS Code','Visual Studio','PyCharm','Eclipse','Android Studio','Xcode','Javadoc','Chrome DevTools',
+  'Jira','Postman','Cypress','pytest','Figma','OpenAPI','Mermaid',
+  'Great Expectations','n8n','Notion','Miro','Lucidchart','WeWeb','Xano','Elementor','Gutenberg',
+  'MITRE ATT&CK','MITRE D3FEND','IDS/IPS','WAF','ELK Stack','TheHive','Cortex','Wireshark','CrowdSec','Stormshield',
+  'DNS','VLAN','OSPF','EIGRP','IPv6','IPSec',
+  'GLPI','Nagios','Cisco Packet Tracer','OCS Inventory','VirtualBox',
+  'Windows','Windows Server','Active Directory'
+);
