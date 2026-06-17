@@ -61,6 +61,9 @@ CREATE TABLE IF NOT EXISTS market_summary (
     developer_usage_count INTEGER DEFAULT 0,
     avg_salary_eur NUMERIC,
     training_count INTEGER DEFAULT 0,
+    top_dept VARCHAR(10),
+    top_dept_name VARCHAR(100),
+    top_dept_population INTEGER,
     computed_at TIMESTAMP DEFAULT NOW()
 );
 

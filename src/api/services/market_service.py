@@ -10,7 +10,8 @@ def market_summary() -> list[MarketSummaryItem]:
         rows = conn.execute(text("""
             SELECT s.name, s.category,
                    ms.job_offer_count, ms.developer_usage_count,
-                   ms.avg_salary_eur, ms.training_count
+                   ms.avg_salary_eur, ms.training_count,
+                   ms.top_dept, ms.top_dept_name, ms.top_dept_population
             FROM market_summary ms
             JOIN skills s ON s.id = ms.skill_id
             WHERE ms.job_offer_count > 0
@@ -23,6 +24,9 @@ def market_summary() -> list[MarketSummaryItem]:
             job_offer_count=r[2], developer_usage_count=r[3],
             avg_salary_eur=float(r[4]) if r[4] is not None else None,
             training_count=r[5],
+            top_dept=r[6],
+            top_dept_name=r[7],
+            top_dept_population=int(r[8]) if r[8] is not None else None,
         )
         for r in rows
     ]

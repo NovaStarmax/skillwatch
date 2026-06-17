@@ -8,6 +8,9 @@ class MarketSummaryItem(BaseModel):
     developer_usage_count: int
     avg_salary_eur: float | None
     training_count: int
+    top_dept: str | None = None
+    top_dept_name: str | None = None
+    top_dept_population: int | None = None
 
 
 class DepartmentStats(BaseModel):
