@@ -19,6 +19,10 @@ load_dotenv()
 URL = "https://openclassrooms.com/fr/paths"
 HTML_PATH = ROOT / "data" / "raw" / "scraping" / "openclassrooms.html"
 TRAINING_MAPPING_PATH = ROOT / "config" / "training_skills_mapping.json"
+SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
+UNMATCHED_LOG = ROOT / "data" / "raw" / "scraping" / "unmatched.log"
+
+ALLOWED_DOMAINS = {"Data", "Développement", "Systèmes & Réseaux", "Cybersécurité"}
 
 
 def fetch_html(path: Path, logger) -> str:
@@ -112,6 +116,7 @@ def fetch_html(path: Path, logger) -> str:
 def parse_formations(html: str, logger) -> list[dict]:
     soup = BeautifulSoup(html, "html.parser")
     formations = []
+    skipped = 0
 
     for card in soup.select("a[href*='/fr/paths/']"):
         href = card.get("href", "")
@@ -120,23 +125,32 @@ def parse_formations(html: str, logger) -> list[dict]:
 
         url = f"https://openclassrooms.com{href}" if href.startswith("/") else href
 
+        # Domaine
+        domain_tag = card.select_one("span.MuiTypography-overline")
+        domain = domain_tag.get_text(strip=True) if domain_tag else None
+
         # Titre
-        title_tag = card.select_one("h2, h3, [class*='title'], [class*='Title']")
-        title = title_tag.get_text(strip=True) if title_tag else card.get_text(strip=True)[:100]
+        title_tag = card.select_one("h3.MuiTypography-h6")
+        title = title_tag.get_text(strip=True) if title_tag else None
         if not title:
             continue
 
-        # Domaine
-        domain_tag = card.select_one("[class*='domain'], [class*='Domain'], [class*='category'], [class*='tag']")
-        domain = domain_tag.get_text(strip=True) if domain_tag else None
+        # Filtre domaine
+        if domain not in ALLOWED_DOMAINS:
+            logger.warning(f"[SCRAPING] Domaine ignoré: {domain} | formation: {title}")
+            skipped += 1
+            continue
 
-        # Niveau / certification
-        level_tag = card.select_one("[class*='level'], [class*='Level'], [class*='diploma'], [class*='badge']")
-        level = level_tag.get_text(strip=True) if level_tag else None
+        # Niveau
+        school_icon = card.find(attrs={"data-testid": "SchoolIcon"})
+        level_span = school_icon.find_next("span", class_="MuiTypography-bodySmall") if school_icon else None
+        level = level_span.get_text(strip=True).replace('\xa0', ' ') if level_span else None
 
-        # Durée
-        card_text = card.get_text(" ", strip=True)
-        duration_match = re.search(r"(\d+)\s*mois", card_text)
+        # Durée (temps plein, premier TodayIcon)
+        today_icon = card.find(attrs={"data-testid": "TodayIcon"})
+        dur_span = today_icon.find_next("span", class_="MuiTypography-bodySmall") if today_icon else None
+        dur_text = dur_span.get_text(strip=True) if dur_span else ""
+        duration_match = re.search(r"(\d+)\s*mois", dur_text)
         duration_months = int(duration_match.group(1)) if duration_match else None
 
         formations.append({
@@ -156,8 +170,91 @@ def parse_formations(html: str, logger) -> list[dict]:
             seen_urls.add(f["url"])
             unique.append(f)
 
-    logger.info(f"[SCRAPING] {len(unique)} formations extraites")
+    total = len(unique) + skipped
+    logger.info(f"[SCRAPING] {len(unique)} formations retenues sur {total} total après filtre domaine")
     return unique
+
+
+def fetch_detail_html(url: str, slug: str, logger) -> str:
+    detail_path = ROOT / "data" / "raw" / "scraping" / "details" / f"{slug}.html"
+
+    if detail_path.exists():
+        logger.info(f"[SCRAPING] Détail déjà présent: {slug} → parsing direct")
+        return detail_path.read_text(encoding="utf-8")
+
+    from playwright.sync_api import sync_playwright
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+            page.set_extra_http_headers({"Accept-Language": "fr-FR,fr;q=0.9"})
+            page.goto(url, wait_until="networkidle", timeout=30000)
+            page.wait_for_timeout(2000)
+            html = page.content()
+            browser.close()
+    except Exception as e:
+        logger.error(f"[SCRAPING] Erreur Playwright pour {slug}: {e}")
+        return ""
+
+    detail_path.parent.mkdir(parents=True, exist_ok=True)
+    detail_path.write_text(html, encoding="utf-8")
+    logger.info(f"[SCRAPING] Détail fetché: {slug} ({len(html)} bytes)")
+    time.sleep(2)
+    return html
+
+
+def extract_skills_from_detail(
+    html: str, slug: str, logger, skills_mapping: dict[str, str]
+) -> list[str]:
+    if not html:
+        return []
+
+    soup = BeautifulSoup(html, "html.parser")
+
+    aside = soup.find("aside", attrs={"data-claire-semantic": "warning"})
+    if not aside:
+        logger.warning(f"[SCRAPING] Pas de balise aside warning: {slug}")
+        return []
+
+    skills_raw = []
+    for p in aside.find_all("p"):
+        full_text = p.get_text(separator=" ", strip=True)
+        strong = p.find("strong")
+        if strong:
+            skills_text = full_text.replace(strong.get_text(strip=True), "").strip(" :,")
+        else:
+            skills_text = full_text
+        if not skills_text:
+            continue
+        candidates = [s.strip() for s in re.split(r"[,;]", skills_text) if s.strip() and len(s.strip()) > 1]
+        if len(candidates) >= 2 or "," in skills_text:
+            skills_raw = candidates
+            break
+
+    if not skills_raw:
+        logger.warning(f"[SCRAPING] Aucune compétence trouvée dans aside: {slug}")
+        return []
+
+    matched = []
+    unmatched = []
+    for raw in skills_raw:
+        normalized = raw.strip().lower()
+        if normalized in skills_mapping:
+            canonical = skills_mapping[normalized]
+            if canonical not in matched:
+                matched.append(canonical)
+        else:
+            unmatched.append(raw)
+
+    if unmatched:
+        with open(UNMATCHED_LOG, "a", encoding="utf-8") as f:
+            for u in unmatched:
+                f.write(f"[UNMATCHED] source: openclassrooms_detail | slug: {slug} | value: {u}\n")
+        logger.warning(f"[SCRAPING] {len(unmatched)} tags non reconnus pour {slug} → unmatched.log")
+
+    logger.info(f"[SCRAPING] {slug}: {len(matched)} skills extraits ({', '.join(matched[:3])}...)")
+    return matched
 
 
 def match_skills(title: str, mapping: dict[str, list[str]]) -> list[str]:
@@ -175,13 +272,35 @@ def run() -> None:
         logger.error(f"[SCRAPING] DATABASE_URL inaccessible: {e}")
         sys.exit(1)
 
-    # Chargement du mapping formations → skills
+    # Chargement des deux mappings
     with open(TRAINING_MAPPING_PATH, encoding="utf-8") as f:
         training_mapping: dict[str, list[str]] = json.load(f)
+    with open(SKILLS_MAPPING_PATH, encoding="utf-8") as f:
+        skills_mapping: dict[str, str] = json.load(f)
 
     html = fetch_html(HTML_PATH, logger)
     formations = parse_formations(html, logger)
 
+    # --- Phase 1 : scraping des pages détail ---
+    logger.info(f"[SCRAPING] Début scraping détails | {len(formations)} formations à traiter")
+    formation_skills: dict[str, list[str]] = {}
+    detail_real = 0
+
+    for formation in formations:
+        url = formation["url"]
+        slug = url.rstrip("/").split("/")[-1]
+        detail_html = fetch_detail_html(url, slug, logger)
+        skills = extract_skills_from_detail(detail_html, slug, logger, skills_mapping)
+        formation_skills[url] = skills
+        if skills:
+            detail_real += 1
+
+    logger.info(
+        f"[SCRAPING] Détails terminés | {detail_real} formations avec skills réels"
+        f" | {len(formations) - detail_real} fallbacks JSON"
+    )
+
+    # --- Phase 2 : upsert ---
     matched_count = 0
     unmatched_count = 0
     training_count = 0
@@ -200,7 +319,9 @@ def run() -> None:
                     VALUES (:title, :domain, :level, :duration_months, :provider, :url)
                     ON CONFLICT (url) DO UPDATE SET
                         title = EXCLUDED.title,
-                        domain = EXCLUDED.domain
+                        domain = EXCLUDED.domain,
+                        level = EXCLUDED.level,
+                        duration_months = EXCLUDED.duration_months
                     RETURNING id
                 """),
                 {
@@ -218,12 +339,16 @@ def run() -> None:
             training_id = row[0]
             training_count += 1
 
-            # Matching skills
-            skills = match_skills(formation["title"], training_mapping)
+            # Skills : depuis détail ou fallback JSON
+            skills = formation_skills.get(formation["url"]) or []
             if not skills:
-                logger.warning(f"[SCRAPING] Titre non mappé: {formation['title']}")
-                unmatched_count += 1
-                continue
+                skills = match_skills(formation["title"], training_mapping)
+                if skills:
+                    logger.info(f"[SCRAPING] Fallback mapping JSON pour: {formation['title']}")
+                else:
+                    logger.warning(f"[SCRAPING] Titre non mappé: {formation['title']}")
+                    unmatched_count += 1
+                    continue
 
             matched_count += 1
             for skill_name in skills:
