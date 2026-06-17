@@ -15,7 +15,8 @@ dependencies = [
     "beautifulsoup4",
     "pandas",
     "python-jose[cryptography]",
-    "passlib[bcrypt]",
+    "argon2-cffi",
+    "python-multipart",
     "python-dotenv",
     "playwright>=1.60.0",
 ]
