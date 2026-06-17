@@ -35,6 +35,7 @@ transform:
 api:
   uv run uvicorn src.api.main:app --reload --port 8000
 
+
 # Vérifie la DB
 db-check:
   docker compose exec postgres_warehouse psql -U skillwatch -d skillwatch_db -c "\dt"
