@@ -24,11 +24,32 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="SkillWatch API",
-    description="Observatoire du marché de l'emploi Data & IA",
+    description="""
+## Observatoire du Marché de l'Emploi Data & IA
+
+SkillWatch agrège des données depuis 5 sources hétérogènes
+pour répondre à : quelles compétences tech sont demandées,
+populaires et bien rémunérées en France ?
+
+### Sources de données
+- **France Travail** : offres d'emploi en temps réel (API REST)
+- **Stack Overflow** : statistiques développeurs 2021-2025
+- **OpenClassrooms** : catalogue de formations tech (scraping)
+- **INSEE** : données démographiques par département (PostgreSQL)
+- **Apache Spark** : traitement Big Data des archives Stack Overflow
+
+### Authentification
+Toutes les routes (sauf /health) nécessitent un token JWT.
+Obtenez votre token via POST /auth/login.
+""",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
+    contact={
+        "name": "SkillWatch",
+        "url": "https://github.com/NovaStarmax/skillwatch",
+    },
 )
 
 app.add_middleware(
