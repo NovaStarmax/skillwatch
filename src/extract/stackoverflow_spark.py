@@ -19,6 +19,7 @@ load_dotenv()
 
 ARCHIVE_DIR = ROOT / "data" / "raw" / "stackoverflow_archive"
 SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
+UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_spark.log"
 
 # Colonnes multi-valeurs stables (présentes sur toutes les années)
 STABLE_COLS = [
@@ -166,8 +167,26 @@ def run() -> None:
         .withColumn("raw_skill", explode(split(col("raw_skills"), ";")))
         .withColumn("raw_skill", lower(trim(col("raw_skill"))))
         .withColumn("canonical_skill", match_skill_udf(col("raw_skill")))
-        .filter(col("canonical_skill").isNotNull())
     )
+
+    # Logging des valeurs non matchées
+    unmatched_rows = (
+        exploded
+        .filter(col("canonical_skill").isNull())
+        .select("survey_year", "raw_skill")
+        .distinct()
+        .collect()
+    )
+    if unmatched_rows:
+        UNMATCHED_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with open(UNMATCHED_LOG, "a", encoding="utf-8") as f:
+            for row in unmatched_rows:
+                f.write(
+                    f"[UNMATCHED] source: spark | year: {row['survey_year']} | value: {row['raw_skill']}\n"
+                )
+        logger.info(f"[SPARK] {len(unmatched_rows)} valeurs non matchées → {UNMATCHED_LOG.name}")
+
+    exploded = exploded.filter(col("canonical_skill").isNotNull())
 
     # Agrégation par skill et par année
     aggregated = (

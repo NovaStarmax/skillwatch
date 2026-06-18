@@ -19,7 +19,7 @@ load_dotenv()
 SURVEY_YEAR = 2025
 DATA_DIR = ROOT / "data" / "raw" / "stackoverflow_latest"
 SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
-UNMATCHED_LOG = ROOT / "data" / "unmatched.log"
+UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_stackoverflow.log"
 
 SKILL_COLUMNS = [
     "LanguageHaveWorkedWith",

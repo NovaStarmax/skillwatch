@@ -11,5 +11,5 @@ dist/
 derby.log
 metastore_db/
 .ds_store
-data/unmatched.log
-unmatched.log
+data/logs/
+!data/logs/.gitkeep

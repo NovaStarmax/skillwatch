@@ -21,7 +21,7 @@ AUTH_URL = "https://entreprise.francetravail.fr/connexion/oauth2/access_token"
 SEARCH_URL = "https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search"
 KEYWORDS = ["data engineer", "data scientist", "développeur python", "machine learning"]
 SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
-UNMATCHED_LOG = ROOT / "data" / "unmatched.log"
+UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_france_travail.log"
 
 _token: str | None = None
 _expires_at: float = 0.0
