@@ -89,3 +89,27 @@ UPDATE skills SET category = 'tool' WHERE name IN (
   'Bun','Chocolatey','Composer','Deno','Homebrew',
   'MSBuild','Ninja','NuGet','Pacman','pip','pnpm','Poetry','Vite'
 );
+
+UPDATE skills SET category = 'language' WHERE name IN (
+  'Haskell','Clojure','Julia','Objective-C','SAS','Solidity','Nim'
+);
+UPDATE skills SET category = 'framework' WHERE name IN (
+  'Flutter','React Native','Electron','Gatsby','Remix','HTMX','Solid.js',
+  'Qt','Ionic','Xamarin','Cordova','Play Framework','Quarkus','Ktor','CodeIgniter'
+);
+UPDATE skills SET category = 'devops' WHERE name IN (
+  'Puppet','Chef','Pulumi','OpenShift','Dagger'
+);
+UPDATE skills SET category = 'tool' WHERE name IN (
+  'CMake','Ant','Make','RabbitMQ','VMware','Ruff',
+  'JWT','REST API','UML','LAN','TCP/IP','Veeam Backup','Vector Store','Data Quality'
+);
+UPDATE skills SET category = 'cloud' WHERE name IN (
+  'OpenStack','Scaleway','OVH','Hetzner','Render','Fly.io','Alibaba Cloud','Oracle Cloud'
+);
+UPDATE skills SET category = 'database' WHERE name IN (
+  'Couchbase','CouchDB','TiDB','Solr','RavenDB','Presto','EventStoreDB'
+);
+UPDATE skills SET category = 'ml' WHERE name IN (
+  'Keras','CUDA','JAX','OpenCV','LLM','Clustering','K-Means','PCA'
+);

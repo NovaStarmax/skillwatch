@@ -18,11 +18,15 @@ load_dotenv()
 
 URL = "https://openclassrooms.com/fr/paths"
 HTML_PATH = ROOT / "data" / "raw" / "scraping" / "openclassrooms.html"
-TRAINING_MAPPING_PATH = ROOT / "config" / "training_skills_mapping.json"
 SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
-UNMATCHED_LOG = ROOT / "data" / "raw" / "scraping" / "unmatched.log"
+UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_openclassrooms.log"
 
 ALLOWED_DOMAINS = {"Data", "Développement", "Systèmes & Réseaux", "Cybersécurité"}
+
+_PREAMBLE_RE = re.compile(
+    r'^vous\s+(?:ma[îi]trisere[zs]|d[ée]couvrirez|apprendrez)\s*',
+    re.IGNORECASE,
+)
 
 
 def fetch_html(path: Path, logger) -> str:
@@ -222,7 +226,18 @@ def extract_skills_from_detail(
         full_text = p.get_text(separator=" ", strip=True)
         strong = p.find("strong")
         if strong:
-            skills_text = full_text.replace(strong.get_text(strip=True), "").strip(" :,")
+            strong_text = strong.get_text(strip=True)
+            # Cas "Vous maîtriserez ... : SKILL1" → extraire après ":"
+            if ":" in strong_text:
+                after_colon = strong_text.split(":", 1)[1].strip(" ,")
+            # Cas "Vous maîtriserez  SKILL1" (preamble sans ":") → extraire après le verbe
+            elif _PREAMBLE_RE.match(strong_text):
+                m = _PREAMBLE_RE.match(strong_text)
+                after_colon = strong_text[m.end():].strip(" ,")
+            else:
+                after_colon = ""
+            rest = full_text.replace(strong_text, "").strip(" :,")
+            skills_text = (after_colon + (", " + rest if rest else "")).strip(", ") if after_colon else rest
         else:
             skills_text = full_text
         if not skills_text:
@@ -257,10 +272,6 @@ def extract_skills_from_detail(
     return matched
 
 
-def match_skills(title: str, mapping: dict[str, list[str]]) -> list[str]:
-    return mapping.get(title, [])
-
-
 def run() -> None:
     logger = get_logger("scraping")
 
@@ -272,9 +283,7 @@ def run() -> None:
         logger.error(f"[SCRAPING] DATABASE_URL inaccessible: {e}")
         sys.exit(1)
 
-    # Chargement des deux mappings
-    with open(TRAINING_MAPPING_PATH, encoding="utf-8") as f:
-        training_mapping: dict[str, list[str]] = json.load(f)
+    # Chargement du mapping skills
     with open(SKILLS_MAPPING_PATH, encoding="utf-8") as f:
         skills_mapping: dict[str, str] = json.load(f)
 
@@ -339,16 +348,12 @@ def run() -> None:
             training_id = row[0]
             training_count += 1
 
-            # Skills : depuis détail ou fallback JSON
+            # Skills : depuis scraping détail uniquement
             skills = formation_skills.get(formation["url"]) or []
             if not skills:
-                skills = match_skills(formation["title"], training_mapping)
-                if skills:
-                    logger.info(f"[SCRAPING] Fallback mapping JSON pour: {formation['title']}")
-                else:
-                    logger.warning(f"[SCRAPING] Titre non mappé: {formation['title']}")
-                    unmatched_count += 1
-                    continue
+                logger.warning(f"[SCRAPING] Aucun skill trouvé pour: {formation['title']}")
+                unmatched_count += 1
+                continue
 
             matched_count += 1
             for skill_name in skills:
@@ -380,7 +385,7 @@ def run() -> None:
         conn.commit()
 
     duration = round(time.time() - start, 1)
-    logger.info(f"[SCRAPING] {matched_count} formations matchées dans training_skills_mapping.json")
+    logger.info(f"[SCRAPING] {matched_count} formations avec skills insérés en base")
     logger.info(f"[SCRAPING] {unmatched_count} formations sans skill détecté")
     logger.info(
         f"[SCRAPING] Upsert terminé | {training_count} trainings | {skill_links} liaisons | durée: {duration}s"
