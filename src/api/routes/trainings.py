@@ -12,6 +12,7 @@ router = APIRouter()
     response_model=list[Training],
     summary="Liste toutes les formations",
     description="Retourne toutes les formations OpenClassrooms scrapées, filtrées sur les domaines tech (Data, Développement, Systèmes & Réseaux, Cybersécurité). Triées par domaine puis titre.",
+    responses={401: {"description": "Token JWT manquant ou invalide"}},
 )
 def list_trainings(_: dict = Depends(get_current_user)):
     return trainings_service.list_trainings()
@@ -22,6 +23,7 @@ def list_trainings(_: dict = Depends(get_current_user)):
     response_model=list[Training],
     summary="Formations pour un skill",
     description="Retourne les formations disponibles pour apprendre un skill spécifique. La recherche est insensible à la casse. Retourne une liste vide si aucune formation ne couvre ce skill.",
+    responses={401: {"description": "Token JWT manquant ou invalide"}},
 )
 def trainings_by_skill(skill_name: str, _: dict = Depends(get_current_user)):
     return trainings_service.trainings_by_skill(skill_name)
