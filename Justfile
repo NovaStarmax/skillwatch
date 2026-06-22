@@ -39,3 +39,20 @@ api:
 # Vérifie la DB
 db-check:
   docker compose exec postgres_warehouse psql -U skillwatch -d skillwatch_db -c "\dt"
+
+# Initialise les bases de données depuis zéro
+db-init:
+  docker compose exec -T postgres_warehouse psql \
+    -U skillwatch -d skillwatch_db < sql/schema_warehouse.sql
+  docker compose exec -T postgres_demographics psql \
+    -U skillwatch -d demographics_db < sql/schema_demographics.sql
+  docker compose exec -T postgres_demographics psql \
+    -U skillwatch -d demographics_db < sql/demographics_dump.sql
+  echo "Bases initialisées"
+
+# Réinitialise complètement les bases (supprime tout)
+db-reset:
+  docker compose down -v
+  docker compose up -d postgres_warehouse postgres_demographics
+  sleep 5
+  just db-init

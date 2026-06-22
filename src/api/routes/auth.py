@@ -17,6 +17,7 @@ Retourne un token Bearer valable 30 minutes.
 Credentials configurés via les variables d'env `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
 
 Utilisation : `Authorization: Bearer {token}`""",
+    responses={401: {"description": "Identifiants incorrects"}},
 )
 def login(body: LoginRequest):
     user = auth_service.authenticate_user(body.username, body.password)

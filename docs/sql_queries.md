@@ -233,6 +233,39 @@ ORDER BY ss.year;
 
 ---
 
+## Optimisations appliquées
+
+### Index UNIQUE comme mécanisme d'optimisation
+
+Le schéma utilise des contraintes UNIQUE qui créent implicitement des index B-tree dans PostgreSQL :
+
+| Table | Contrainte UNIQUE | Impact |
+|-------|------------------|--------|
+| skills | name | Lookup O(log n) sur le nom canonique |
+| job_offers | external_id | Détection doublons O(log n) à l'upsert |
+| survey_stats | (skill_id, year) | Unicité garantie sans scan complet |
+| market_summary | skill_id | Accès direct O(log n) par skill |
+| trainings | url | Déduplication O(log n) à l'upsert |
+
+### ON CONFLICT — upsert atomique
+
+Le pattern `ON CONFLICT DO UPDATE` évite deux opérations séparées (SELECT + INSERT ou UPDATE) :
+
+```sql
+INSERT INTO skills (name, category)
+VALUES (:name, :category)
+ON CONFLICT (name) DO NOTHING;
+```
+
+Une seule opération atomique au lieu de deux. Critique pour un pipeline replayable sans doublons.
+
+### LIMIT sur les endpoints API
+
+Toutes les routes API appliquent un `LIMIT` explicite pour éviter les full scans sur des tables de
+300+ skills et 550+ offres. Valeur par défaut : 50.
+
+---
+
 ## Synthèse
 
 | Requête | Opérations SQL | Source |
