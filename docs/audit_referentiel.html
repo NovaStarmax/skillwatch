@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillWatch — Audit Référentiel Diplôme</title>
+<style>
+  :root {
+    --green: #16a34a;
+    --red: #dc2626;
+    --amber: #d97706;
+    --bg: #f9fafb;
+    --surface: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --green-bg: #f0fdf4;
+    --red-bg: #fef2f2;
+    --amber-bg: #fffbeb;
+    --green-border: #bbf7d0;
+    --red-border: #fecaca;
+    --amber-border: #fde68a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem 1rem;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  header { margin-bottom: 2.5rem; }
+  header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text); }
+  header p { color: var(--muted); margin-top: 0.3rem; font-size: 0.95rem; }
+  .score-bar {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .score-card {
+    flex: 1; min-width: 120px; text-align: center;
+    padding: 0.75rem 0.5rem; border-radius: 8px;
+  }
+  .score-card.total { background: #f3f4f6; }
+  .score-card.ok { background: var(--green-bg); border: 1px solid var(--green-border); }
+  .score-card.fail { background: var(--red-bg); border: 1px solid var(--red-border); }
+  .score-card.warn { background: var(--amber-bg); border: 1px solid var(--amber-border); }
+  .score-number { font-size: 2rem; font-weight: 800; line-height: 1; }
+  .score-number.ok { color: var(--green); }
+  .score-number.fail { color: var(--red); }
+  .score-number.warn { color: var(--amber); }
+  .score-label { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+  .bloc { margin-bottom: 2rem; }
+  .bloc-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px 10px 0 0; padding: 1rem 1.25rem;
+    border-bottom: 2px solid var(--border);
+  }
+  .bloc-header h2 { font-size: 1rem; font-weight: 700; }
+  .bloc-header .tag {
+    font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem;
+    border-radius: 999px; background: #e0e7ff; color: #3730a3;
+  }
+  .criterion {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 0.85rem 1.25rem;
+    display: grid; grid-template-columns: 28px 1fr; gap: 0.75rem;
+    align-items: start;
+  }
+  .criterion:last-child { border-radius: 0 0 10px 10px; }
+  .criterion + .criterion { border-top: 1px solid var(--border); }
+  .badge {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+  }
+  .badge.ok { background: var(--green-bg); color: var(--green); border: 1.5px solid var(--green-border); }
+  .badge.fail { background: var(--red-bg); color: var(--red); border: 1.5px solid var(--red-border); }
+  .badge.partial { background: var(--amber-bg); color: var(--amber); border: 1.5px solid var(--amber-border); }
+  .crit-id { font-size: 0.7rem; font-weight: 700; color: var(--muted); margin-bottom: 0.15rem; }
+  .crit-label { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+  .crit-evidence {
+    font-size: 0.82rem; color: var(--muted); margin-top: 0.3rem; line-height: 1.5;
+  }
+  .crit-evidence code {
+    background: #f3f4f6; padding: 0.1rem 0.35rem; border-radius: 4px;
+    font-size: 0.8rem; color: #374151; font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .crit-fix {
+    font-size: 0.82rem; color: var(--red); margin-top: 0.4rem;
+    background: var(--red-bg); border: 1px solid var(--red-border);
+    border-radius: 6px; padding: 0.5rem 0.75rem;
+  }
+  .crit-fix strong { font-weight: 700; }
+  footer { text-align: center; color: var(--muted); font-size: 0.8rem; margin-top: 2.5rem; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>SkillWatch — Audit Référentiel Diplôme</h1>
+    <p>Audit complet de toutes les sources du dépôt. Généré le 2026-06-22.</p>
+  </header>
+
+  <div class="score-bar">
+    <div class="score-card total">
+      <div class="score-number" style="color:#374151">24</div>
+      <div class="score-label">Critères totaux</div>
+    </div>
+    <div class="score-card ok">
+      <div class="score-number ok">20</div>
+      <div class="score-label">✅ Vérifiés</div>
+    </div>
+    <div class="score-card warn">
+      <div class="score-number warn">2</div>
+      <div class="score-label">⚠️ Partiels</div>
+    </div>
+    <div class="score-card fail">
+      <div class="score-number fail">2</div>
+      <div class="score-label">❌ Manquants</div>
+    </div>
+  </div>
+
+  <!-- C1 -->
+  <div class="bloc">
+    <div class="bloc-header">
+      <span class="tag">C1</span>
+      <h2>Extraction automatisée</h2>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C1-1</div>
+        <div class="crit-label">Présentation complète : acteurs, objectifs, contraintes, budget, planning</div>
+        <div class="crit-evidence">
+          <code>docs/presentation.md</code> — tableau Acteurs (l.17-26), Objectifs (l.29-33), tableau Contraintes avec budget "0€" et délai "1 semaine" (l.35-43), tableau Planning (l.79-87).
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C1-2</div>
+        <div class="crit-label">Spécifications techniques : outils, langages, accessibilité</div>
+        <div class="crit-evidence">
+          <code>docs/presentation.md</code> — tableau Stack technique (l.48-60) : Python 3.12, uv, PostgreSQL, PySpark, FastAPI, Playwright, JWT/Argon2, Justfile, Docker Compose. Tableau Sources de données avec colonne Accessibilité (l.62-70).
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C1-3</div>
+        <div class="crit-label">Périmètre couvrant l'ensemble des moyens techniques pour l'extraction et l'agrégation</div>
+        <div class="crit-evidence">
+          <code>docs/presentation.md</code> l.62-70 liste les 5 sources. <code>docs/agregation.md</code> documente toutes les dépendances et commandes. <code>main.py</code> orchestre les 5 extracteurs + le transformateur.
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C1-4</div>
+        <div class="crit-label">Script d'extraction fonctionnel avec fonction <code>run()</code> pour chaque source</div>
+        <div class="crit-evidence">
+          Tous les extracteurs ont une fonction <code>run()</code> appelée par <code>main.py</code> : <code>france_travail.py</code> l.129, <code>stackoverflow_latest.py</code> l.46, <code>stackoverflow_spark.py</code> l.45, <code>openclassrooms.py</code> l.275, <code>demographics.py</code> l.97. Upserts PostgreSQL vérifiés dans chaque fichier.
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C1-5</div>
+        <div class="crit-label">Script comprend : point de lancement, initialisation, règles logiques, gestion des erreurs, sauvegarde</div>
+        <div class="crit-evidence">
+          <code>main.py</code> — point de lancement (l.77-102, <code>if __name__ == "__main__"</code>). Init DB testée à l'entrée de chaque extracteur (<code>france_travail.py</code> l.132-138). Règles logiques : tokenisation + mapping aliases. Gestion erreurs : <code>try/except</code> avec <code>sys.exit(1)</code> sur erreurs critiques, <code>logger.warning</code> sur erreurs non-bloquantes. Sauvegarde : upserts PostgreSQL + logs unmatched dans <code>data/logs/</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C1-6</div>
+        <div class="crit-label">Script versionné sur un dépôt Git accessible</div>
+        <div class="crit-evidence">
+          Dépôt GitHub : <code>https://github.com/NovaStarmax/skillwatch</code> (visible dans <code>src/api/main.py</code> l.51 et remote origin). 10+ commits documentés avec messages sémantiques.
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C1-7</div>
+        <div class="crit-label">Extraction depuis un mix d'au moins : API REST, fichier, scraping, base de données, système Big Data</div>
+        <div class="crit-evidence">
+          <strong>API REST</strong> : France Travail OAuth2 (<code>france_travail.py</code> l.30-31). <strong>Fichier CSV</strong> : Stack Overflow Survey 2025 (<code>stackoverflow_latest.py</code> l.60). <strong>Scraping</strong> : OpenClassrooms Playwright+BS4 (<code>openclassrooms.py</code> l.37-117). <strong>Base de données</strong> : INSEE PostgreSQL (<code>demographics.py</code> l.30-38). <strong>Big Data</strong> : PySpark 3.5 sur archives CSV 2021-2024 (<code>stackoverflow_spark.py</code> l.68-75).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C2 -->
+  <div class="bloc">
+    <div class="bloc-header">
+      <span class="tag">C2</span>
+      <h2>Requêtes SQL</h2>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C2-8</div>
+        <div class="crit-label">Requêtes SQL fonctionnelles avec résultats réels</div>
+        <div class="crit-evidence">
+          <code>docs/sql_queries.md</code> — 5 requêtes avec tableaux de résultats réels (données issues de vraies exécutions). Ex : Requête 2 produit Python=274 offres, SQL=216 (l.79-89). Requête 5 donne l'évolution Python 2021-2025 (l.224-232).
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C2-9</div>
+        <div class="crit-label">Documentation des choix de sélections, filtrages, conditions et jointures</div>
+        <div class="crit-evidence">
+          <code>docs/sql_queries.md</code> — chaque requête a une section "Explication" détaillée. Ex : justification des 2 JOIN N-N (l.29-38), explication WHERE vs AND (l.34-37), jointure cross-DB via Python (l.173-177).
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge partial">~</div>
+      <div>
+        <div class="crit-id">C2-10</div>
+        <div class="crit-label">Documentation des optimisations appliquées aux requêtes</div>
+        <div class="crit-evidence">
+          <code>docs/sql_queries.md</code> mentionne des techniques d'optimisation implicites : <code>COUNT(DISTINCT …)</code> (l.59, 69-73), <code>HAVING</code> post-agrégation (l.112, 122-127), <code>WHERE … IS NOT NULL</code> pour réduire les lignes avant agrégation (l.125-127), <code>LIMIT 10/20</code> sur toutes les requêtes.
+        </div>
+        <div class="crit-fix">
+          <strong>Incomplet :</strong> aucune mention d'index dans <code>sql/schema_warehouse.sql</code> (pas un seul <code>CREATE INDEX</code>) ni dans la documentation. Le critère demande l'explicitation des "optimisations appliquées" — les techniques utilisées sont bonnes mais pas présentées sous l'angle "optimisation" (pas de section dédiée, pas de comparaison avec/sans optimisation, pas de mention de l'impact des clés primaires comme index implicites). À ajouter : une section "Optimisations" dans <code>docs/sql_queries.md</code> ou des <code>CREATE INDEX</code> commentés dans <code>sql/schema_warehouse.sql</code>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C3 -->
+  <div class="bloc">
+    <div class="bloc-header">
+      <span class="tag">C3</span>
+      <h2>Agrégation</h2>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C3-11</div>
+        <div class="crit-label">Script d'agrégation fonctionnel (données agrégées, nettoyées, normalisées)</div>
+        <div class="crit-evidence">
+          <code>src/transform/normalizer.py</code> — calcule pour chaque skill : <code>job_offer_count</code>, <code>developer_usage_count</code>, <code>avg_salary_eur</code> (× 0.92 USD→EUR), <code>training_count</code>, <code>top_dept</code>. Upsert via <code>ON CONFLICT (skill_id) DO UPDATE</code> (l.116-138). Nettoyage dans les extracteurs via <code>skills_mapping.json</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C3-12</div>
+        <div class="crit-label">Script d'agrégation versionné sur Git</div>
+        <div class="crit-evidence">
+          Inclus dans le même dépôt Git GitHub (<code>NovaStarmax/skillwatch</code>). Commit dédié visible : <code>feat: market summary enriched</code> (sha 2355033).
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C3-13</div>
+        <div class="crit-label">Documentation complète : dépendances, commandes, algorithme, choix de nettoyage</div>
+        <div class="crit-evidence">
+          <code>docs/agregation.md</code> — tableau de dépendances (l.10-17), commandes Justfile (l.19-26), algorithme en 5 étapes documentées (Tokenisation, Lookup, Normalisation, Traçabilité, Enrichissement itératif, l.28-100), tableau des choix de nettoyage justifiés (l.116-123).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C4 -->
+  <div class="bloc">
+    <div class="bloc-header">
+      <span class="tag">C4</span>
+      <h2>RGPD / Merise</h2>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C4-14</div>
+        <div class="crit-label">Modélisations respectent la méthode et le formalisme Merise (MCD + MPD)</div>
+        <div class="crit-evidence">
+          <code>docs/merise_mcd.md</code> — MCD avec entités, attributs, identifiants et cardinalités (0,N)-(0,N), (0,N)-(1,1), (0,1)-(1,1) (l.17-102). MPD sous forme de tableau avec clés primaires, étrangères et contraintes UNIQUE (l.145-166). Diagramme Mermaid ER complet (l.172-246). Justifications de modélisation détaillées (l.108-141).
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C4-15</div>
+        <div class="crit-label">Modèle physique fonctionnel et intégré sans erreur</div>
+        <div class="crit-evidence">
+          <code>sql/schema_warehouse.sql</code> — DDL complet avec toutes les tables (skills, job_offers, job_offer_skills, survey_stats, trainings, training_skills, market_summary, users), FK avec CASCADE, UNIQUE et PRIMARY KEY. <code>sql/schema_demographics.sql</code> pour la base INSEE. Script SQL cohérent avec le MCD documenté.
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C4-16</div>
+        <div class="crit-label">Base de données choisie et justifiée selon la modélisation et les contraintes</div>
+        <div class="crit-evidence">
+          <code>docs/merise_mcd.md</code> l.136-141 — section "Pourquoi PostgreSQL" : modèle relationnel, contraintes ACID, intégration SQLAlchemy, support UNIQUE et ON DELETE CASCADE. Justification des 2 instances distinctes (l.126-134).
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge partial">~</div>
+      <div>
+        <div class="crit-id">C4-17</div>
+        <div class="crit-label">Script d'import fonctionnel</div>
+        <div class="crit-evidence">
+          Les fichiers SQL d'init existent : <code>sql/schema_warehouse.sql</code>, <code>sql/schema_demographics.sql</code>, <code>sql/demographics_dump.sql</code>, <code>sql/seed_skill_categories.sql</code>. Le docker-compose démarre PostgreSQL. L'API crée l'admin au démarrage via <code>create_default_admin()</code> (<code>src/api/main.py</code> l.19).
+        </div>
+        <div class="crit-fix">
+          <strong>Incomplet :</strong> le <code>Justfile</code> ne contient aucune commande <code>db-init</code> ou <code>db-setup</code> qui appliquerait les fichiers SQL. Le <code>docker-compose.yml</code> ne monte pas les scripts dans <code>/docker-entrypoint-initdb.d/</code>. Il n'existe aucun script d'initialisation automatique documenté — un opérateur doit appliquer manuellement les SQL, mais nulle part c'est expliqué (même pas dans le README). Ajouter une commande <code>db-init</code> dans le Justfile ou monter les SQL dans docker-compose, et documenter dans le README.
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C4-18</div>
+        <div class="crit-label">Registre des traitements intégrant tous les traitements impliqués</div>
+        <div class="crit-evidence">
+          <code>docs/rgpd_registre.md</code> — analyse par source (France Travail, Stack Overflow, OpenClassrooms, INSEE) avec qualification "données personnelles" (l.16-21). Traitement borderline <code>users</code> explicitement qualifié (l.23-33). Position légale RGPD art. 30 justifiée (l.35-40).
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C4-19</div>
+        <div class="crit-label">Procédures de tri pour la mise en conformité RGPD rédigées et détaillées</div>
+        <div class="crit-evidence">
+          <code>docs/rgpd_procedures.md</code> — 4 procédures : suppression compte admin avec SQL (l.12-24), politique de rétention par table (l.26-38), réponse demande suppression avec délai 72h (l.40-44), réinitialisation complète avec commandes bash (l.46-60).
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- C5 -->
+  <div class="bloc">
+    <div class="bloc-header">
+      <span class="tag">C5</span>
+      <h2>API REST</h2>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C5-20</div>
+        <div class="crit-label">Documentation technique couvrant tous les points de terminaison</div>
+        <div class="crit-evidence">
+          <code>docs/openapi.md</code> documente les 8 endpoints avec exemples curl et réponses JSON. <code>docs/openapi.json</code> contient le schéma OpenAPI 3.1.0 généré automatiquement par FastAPI, couvrant tous les paths : <code>/auth/login</code>, <code>/skills</code>, <code>/skills/{name}</code>, <code>/market/summary</code>, <code>/market/by-department</code>, <code>/trainings</code>, <code>/trainings/skill/{skill_name}</code>, <code>/health</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C5-21</div>
+        <div class="crit-label">Documentation des règles d'authentification et d'autorisation</div>
+        <div class="crit-evidence">
+          <code>docs/openapi.md</code> l.9-35 — section "Authentification" complète : endpoint <code>POST /auth/login</code>, format Bearer token, durée 30 min, exemple curl. <code>openapi.json</code> déclare <code>securitySchemes.HTTPBearer</code> et chaque route sécurisée porte <code>"security":[{"HTTPBearer":[]}]</code>.
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C5-22</div>
+        <div class="crit-label">Documentation respectant les standards OpenAPI</div>
+        <div class="crit-evidence">
+          <code>docs/openapi.json</code> — version <code>"openapi":"3.1.0"</code>, structure conforme : <code>info</code>, <code>paths</code>, <code>components.schemas</code>, <code>components.securitySchemes</code>. Schémas Pydantic générés automatiquement par FastAPI (SkillDetail, MarketSummaryItem, Training, DepartmentStats, LoginRequest, TokenResponse). <code>operationId</code> présent sur chaque endpoint.
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge ok">✓</div>
+      <div>
+        <div class="crit-id">C5-23</div>
+        <div class="crit-label">L'API restreint l'accès par authentification/autorisation</div>
+        <div class="crit-evidence">
+          <code>src/api/core/security.py</code> — <code>get_current_user()</code> via <code>Depends(bearer_scheme)</code>, décode JWT avec <code>python-jose</code>, vérifie l'utilisateur en base (l.34-56). Argon2 pour le hachage des mots de passe (l.13, 17-22). Toutes les routes (sauf <code>/health</code>) ont <code>Depends(get_current_user)</code> : <code>skills.py</code> l.16, <code>market.py</code> l.16, <code>trainings.py</code> l.16, <code>auth.py</code> produit le token.
+        </div>
+      </div>
+    </div>
+
+    <div class="criterion">
+      <div class="badge fail">✗</div>
+      <div>
+        <div class="crit-id">C5-24</div>
+        <div class="crit-label">L'API permet la récupération de l'ensemble des données prévues (job_offers, skills, trainings, market_summary, survey_stats)</div>
+        <div class="crit-evidence">
+          Endpoints présents : <code>/skills</code> ✓, <code>/trainings</code> ✓, <code>/market/summary</code> ✓ (inclut données market_summary agrégées), <code>/market/by-department</code> ✓.
+        </div>
+        <div class="crit-fix">
+          <strong>Manquant :</strong> aucun endpoint n'expose directement les <strong>offres d'emploi brutes</strong> (<code>job_offers</code>) ni les <strong>statistiques annuelles Stack Overflow</strong> (<code>survey_stats</code>). La table <code>survey_stats</code> contient l'évolution 2021–2025 (Requête 5 documentée dans <code>docs/sql_queries.md</code>) mais n'est accessible par aucune route API. Il manque au minimum : <code>GET /jobs</code> (liste des offres) et <code>GET /skills/{name}/trend</code> ou <code>GET /survey-stats</code> (évolution temporelle). À ajouter dans <code>src/api/routes/</code>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global gap: 401 in openapi -->
+  <div class="bloc">
+    <div class="bloc-header" style="border-radius:10px; border-bottom:none;">
+      <span class="tag" style="background:#fce7f3;color:#9d174d;">Note transverse</span>
+      <h2>Réponse 401 absente du schéma OpenAPI</h2>
+    </div>
+  </div>
+  <div style="background:#fff7f7;border:1px solid #fecaca;border-radius:8px;padding:1rem 1.25rem;margin-top:-1.5rem;margin-bottom:2rem;font-size:0.85rem;color:#7f1d1d;">
+    Dans <code>docs/openapi.json</code>, aucune des 6 routes sécurisées ne déclare de réponse <code>"401"</code>. La documentation narrative (<code>docs/openapi.md</code>) en parle, mais le schéma machine-readable est incomplet. Bien que non bloquant pour C5-20 (la doc narrative compense), c'est une lacune de conformité OpenAPI stricte. À corriger dans le fichier JSON et dans les définitions de routes FastAPI (<code>responses={401: ...}</code>).
+  </div>
+
+  <footer>Audit généré automatiquement depuis les sources du dépôt — 2026-06-22</footer>
+</div>
+</body>
+</html>
