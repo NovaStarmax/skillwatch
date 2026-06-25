@@ -63,21 +63,32 @@ cd skillwatch
 
 # 2. Configurer les variables d'environnement
 cp .env.example .env
-# → Renseigner FRANCE_TRAVAIL_CLIENT_ID, FRANCE_TRAVAIL_CLIENT_SECRET,
-#   JWT_SECRET_KEY et ADMIN_PASSWORD dans .env
+# Renseigner FRANCE_TRAVAIL_CLIENT_ID, FRANCE_TRAVAIL_CLIENT_SECRET,
+# JWT_SECRET_KEY dans .env
 
 # 3. Installer les dépendances Python
 uv sync
 
-# 4. Installer les navigateurs Playwright (scraping OpenClassrooms)
+# 4. Installer Playwright (scraping OpenClassrooms)
 uv run playwright install chromium
 
-# 5. Démarrer les services Docker
-docker compose up -d
+# 5. Démarrer les bases de données et Spark
+docker compose up -d postgres_warehouse postgres_demographics spark
 
 # 6. Initialiser les bases de données
 just db-init
+
+# 7. Lancer le pipeline ETL
+just pipeline
+
+# 8. Démarrer l'API
+just api
+# → http://localhost:8000
+# → http://localhost:8000/docs
 ```
+
+Note : l'API tourne en local via just api.
+Docker gère uniquement PostgreSQL et Spark.
 
 ---
 
