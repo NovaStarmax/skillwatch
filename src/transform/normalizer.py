@@ -23,21 +23,6 @@ def run() -> None:
     demo_engine = get_demographics_engine()
 
     with engine.connect() as conn:
-        conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS market_summary (
-                skill_id INTEGER PRIMARY KEY REFERENCES skills(id) ON DELETE CASCADE,
-                job_offer_count INTEGER DEFAULT 0,
-                developer_usage_count INTEGER DEFAULT 0,
-                avg_salary_eur NUMERIC,
-                training_count INTEGER DEFAULT 0,
-                top_dept VARCHAR(10),
-                top_dept_name VARCHAR(100),
-                top_dept_population INTEGER,
-                computed_at TIMESTAMP DEFAULT NOW()
-            )
-        """))
-        conn.commit()
-
         skills = conn.execute(text("SELECT id, name FROM skills ORDER BY name")).fetchall()
         count = 0
         top_dept_count = 0
