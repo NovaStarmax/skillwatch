@@ -13,3 +13,5 @@ metastore_db/
 .ds_store
 data/logs/
 !data/logs/.gitkeep
+
+backup_*.sql
