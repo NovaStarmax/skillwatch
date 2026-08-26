@@ -1,0 +1,156 @@
+[0m16:33:44.126179 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b1c9400>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c68b750>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c68b610>]}
+
+
+============================== 16:33:44.148298 | dc02f027-d7a2-4a41-bbff-a681bedfd6ed ==============================
+[0m16:33:44.148298 [info ] [MainThread]: Running with dbt=1.12.3
+[0m16:33:44.148695 [debug] [MainThread]: running dbt with arguments {'log_cache_events': 'False', 'use_experimental_parser': 'False', 'maximum_seed_size_mib': '1', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'profiles_dir': '/Users/antoinegobbe/.dbt', 'static_parser': 'True', 'quiet': 'False', 'debug': 'False', 'fail_fast': 'False', 'no_print': 'None', 'hints_enabled': 'True', 'invocation_command': 'dbt init', 'log_format': 'default', 'send_anonymous_usage_stats': 'True', 'log_path': 'logs', 'warn_error': 'None', 'version_check': 'True', 'introspect': 'True', 'printer_width': '80', 'partial_parse': 'True', 'indirect_selection': 'eager', 'cache_selected_only': 'False', 'target_path': 'None', 'use_colors': 'True', 'empty': 'None', 'write_json': 'True'}
+[0m16:33:44.191068 [info ] [MainThread]: Creating dbt configuration folder at /Users/antoinegobbe/.dbt
+[0m16:34:11.907273 [debug] [MainThread]: Starter project path: /Users/antoinegobbe/Desktop/Plateforme/certification/skillwatch/.venv/lib/python3.13/site-packages/dbt/include/starter_project
+[0m16:34:11.915500 [info ] [MainThread]: Setting up your profile.
+[0m16:39:09.646520 [info ] [MainThread]: Profile skillwatch written to /Users/antoinegobbe/.dbt/profiles.yml using target's profile_template.yml and your supplied values.
+[0m16:39:09.655496 [info ] [MainThread]: Running dbt debug to validate the project...
+[0m16:39:09.656531 [info ] [MainThread]: dbt version: 1.12.3
+[0m16:39:09.656894 [info ] [MainThread]: python version: 3.13.7
+[0m16:39:09.657132 [info ] [MainThread]: python path: /Users/antoinegobbe/Desktop/Plateforme/certification/skillwatch/.venv/bin/python3
+[0m16:39:09.657352 [info ] [MainThread]: os info: macOS-26.0-arm64-arm-64bit-Mach-O
+[0m16:39:09.674479 [info ] [MainThread]: Using profiles dir at /Users/antoinegobbe/.dbt
+[0m16:39:09.674806 [info ] [MainThread]: Using profiles.yml file at /Users/antoinegobbe/.dbt/profiles.yml
+[0m16:39:09.674981 [info ] [MainThread]: Using dbt_project.yml file at /Users/antoinegobbe/Desktop/Plateforme/certification/skillwatch/skillwatch/dbt_project.yml
+[0m16:39:09.675939 [info ] [MainThread]: adapter type: postgres
+[0m16:39:09.676113 [info ] [MainThread]: adapter version: 1.11.0
+[0m16:39:09.730187 [info ] [MainThread]: Configuration:
+[0m16:39:09.730493 [info ] [MainThread]:   profiles.yml file [[32mOK found and valid[0m]
+[0m16:39:09.730663 [info ] [MainThread]:   dbt_project.yml file [[32mOK found and valid[0m]
+[0m16:39:09.730820 [info ] [MainThread]: Required dependencies:
+[0m16:39:09.731057 [debug] [MainThread]: Executing "git --help"
+[0m16:39:09.746166 [debug] [MainThread]: STDOUT: "b"usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]\n           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]\n           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]\n           <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone      Clone a repository into a new directory\n   init       Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add        Add file contents to the index\n   mv         Move or rename a file, a directory, or a symlink\n   restore    Restore working tree files\n   rm         Remove files from the working tree and from the index\n\nexamine the history and state (see also: git help revisions)\n   bisect     Use binary search to find the commit that introduced a bug\n   diff       Show changes between commits, commit and working tree, etc\n   grep       Print lines matching a pattern\n   log        Show commit logs\n   show       Show various types of objects\n   status     Show the working tree status\n\ngrow, mark and tweak your common history\n   backfill   Download missing objects in a partial clone\n   branch     List, create, or delete branches\n   commit     Record changes to the repository\n   merge      Join two or more development histories together\n   rebase     Reapply commits on top of another base tip\n   reset      Reset current HEAD to the specified state\n   switch     Switch branches\n   tag        Create, list, delete or verify a tag object signed with GPG\n\ncollaborate (see also: git help workflows)\n   fetch      Download objects and refs from another repository\n   pull       Fetch from and integrate with another repository or a local branch\n   push       Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.\n""
+[0m16:39:09.746830 [debug] [MainThread]: STDERR: "b''"
+[0m16:39:09.747041 [info ] [MainThread]:  - git [[32mOK found[0m]
+
+[0m16:39:09.747226 [info ] [MainThread]: Connection:
+[0m16:39:09.747413 [info ] [MainThread]:   host: localhost
+[0m16:39:09.747554 [info ] [MainThread]:   port: 5432
+[0m16:39:09.747684 [info ] [MainThread]:   user: skillwatch
+[0m16:39:09.747814 [info ] [MainThread]:   database: skillwatch_warehouse
+[0m16:39:09.747942 [info ] [MainThread]:   schema: public
+[0m16:39:09.748065 [info ] [MainThread]:   connect_timeout: 10
+[0m16:39:09.748186 [info ] [MainThread]:   role: None
+[0m16:39:09.748302 [info ] [MainThread]:   search_path: None
+[0m16:39:09.748416 [info ] [MainThread]:   keepalives_idle: 0
+[0m16:39:09.748534 [info ] [MainThread]:   sslmode: None
+[0m16:39:09.748646 [info ] [MainThread]:   sslcert: None
+[0m16:39:09.748763 [info ] [MainThread]:   sslkey: None
+[0m16:39:09.748882 [info ] [MainThread]:   sslrootcert: None
+[0m16:39:09.749003 [info ] [MainThread]:   application_name: dbt
+[0m16:39:09.749129 [info ] [MainThread]:   autocommit: False
+[0m16:39:09.749246 [info ] [MainThread]:   retries: 1
+[0m16:39:09.749692 [info ] [MainThread]: Registered adapter: postgres=1.11.0
+[0m16:39:09.866068 [debug] [MainThread]: Acquiring new postgres connection 'debug'
+[0m16:39:09.922561 [debug] [MainThread]: Using postgres connection "debug"
+[0m16:39:09.922838 [debug] [MainThread]: On debug: select 1 as id
+[0m16:39:09.923008 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m16:39:09.959013 [debug] [MainThread]: Postgres adapter: Got a retryable error when attempting to open a postgres connection.
+1 attempts remaining. Retrying in 0 seconds.
+Error:
+connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  database "skillwatch_warehouse" does not exist
+
+[0m16:39:09.967963 [debug] [MainThread]: Postgres adapter: Error running SQL: select 1 as id
+[0m16:39:09.968183 [debug] [MainThread]: Postgres adapter: Rolling back transaction.
+[0m16:39:09.968396 [debug] [MainThread]: On debug: No close available on handle
+[0m16:39:09.968641 [info ] [MainThread]:   Connection test: [[31mERROR[0m]
+
+[0m16:39:09.968832 [info ] [MainThread]: [31m1 check failed:[0m
+[0m16:39:09.968986 [info ] [MainThread]: dbt was unable to connect to the specified database.
+The database returned the following error:
+
+  >Database Error
+  connection to server at "localhost" (127.0.0.1), port 5432 failed: FATAL:  database "skillwatch_warehouse" does not exist
+  
+
+Check your database credentials and try again. For more information, visit:
+https://docs.getdbt.com/docs/configure-your-profile
+
+
+[0m16:39:09.969331 [info ] [MainThread]: Your new dbt project "skillwatch" was created!
+Initialized new project in /Users/antoinegobbe/Desktop/Plateforme/certification/skillwatch/skillwatch/skillwatch
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m16:39:09.969524 [info ] [MainThread]: [31mYour profile may need adjustments. You can find the logs of `dbt debug` above[0m
+[0m16:39:09.970029 [debug] [MainThread]: Resource report: {"command_name": "init", "command_success": true, "command_wall_clock_time": 325.89407, "process_in_blocks": "0", "process_kernel_time": 0.518364, "process_mem_max_rss": "162594816", "process_out_blocks": "0", "process_user_time": 2.007998}
+[0m16:39:09.970401 [debug] [MainThread]: Command `dbt init` succeeded at 16:39:09.970303 after 325.89 seconds
+[0m16:39:09.970608 [debug] [MainThread]: Connection 'debug' was properly closed.
+[0m16:39:09.970861 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ca0a3f0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ccbc710>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c949e10>]}
+[0m16:39:09.971185 [debug] [MainThread]: Flushing usage events
+[0m16:39:10.666698 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m16:45:12.706365 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c6a5be0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10dac7750>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10dac7890>]}
+
+
+============================== 16:45:12.709946 | c1d73bf9-df04-4409-8512-fe00dcefea33 ==============================
+[0m16:45:12.709946 [info ] [MainThread]: Running with dbt=1.12.3
+[0m16:45:12.710346 [debug] [MainThread]: running dbt with arguments {'target_path': 'None', 'use_colors': 'True', 'write_json': 'True', 'static_parser': 'True', 'invocation_command': 'dbt debug', 'maximum_seed_size_mib': '1', 'log_cache_events': 'False', 'send_anonymous_usage_stats': 'True', 'introspect': 'True', 'empty': 'None', 'cache_selected_only': 'False', 'fail_fast': 'False', 'partial_parse': 'True', 'indirect_selection': 'eager', 'profiles_dir': '/Users/antoinegobbe/.dbt', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'use_experimental_parser': 'False', 'hints_enabled': 'True', 'version_check': 'True', 'debug': 'False', 'printer_width': '80', 'log_path': 'logs', 'warn_error': 'None', 'quiet': 'False', 'log_format': 'default', 'no_print': 'None'}
+[0m16:45:12.721353 [info ] [MainThread]: dbt version: 1.12.3
+[0m16:45:12.721608 [info ] [MainThread]: python version: 3.13.7
+[0m16:45:12.721779 [info ] [MainThread]: python path: /Users/antoinegobbe/Desktop/Plateforme/certification/skillwatch/.venv/bin/python3
+[0m16:45:12.721927 [info ] [MainThread]: os info: macOS-26.0-arm64-arm-64bit-Mach-O
+[0m16:45:12.767629 [info ] [MainThread]: Using profiles dir at /Users/antoinegobbe/.dbt
+[0m16:45:12.767941 [info ] [MainThread]: Using profiles.yml file at /Users/antoinegobbe/.dbt/profiles.yml
+[0m16:45:12.768109 [info ] [MainThread]: Using dbt_project.yml file at /Users/antoinegobbe/Desktop/Plateforme/certification/skillwatch/dbt_project.yml
+[0m16:45:12.768529 [info ] [MainThread]: adapter type: postgres
+[0m16:45:12.768724 [info ] [MainThread]: adapter version: 1.11.0
+[0m16:45:12.768884 [info ] [MainThread]: Configuration:
+[0m16:45:12.769019 [info ] [MainThread]:   profiles.yml file [[32mOK found and valid[0m]
+[0m16:45:12.769145 [info ] [MainThread]:   dbt_project.yml file [[31mERROR not found[0m]
+[0m16:45:12.769300 [info ] [MainThread]: Required dependencies:
+[0m16:45:12.769515 [debug] [MainThread]: Executing "git --help"
+[0m16:45:12.777783 [debug] [MainThread]: STDOUT: "b"usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]\n           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]\n           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]\n           <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone      Clone a repository into a new directory\n   init       Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add        Add file contents to the index\n   mv         Move or rename a file, a directory, or a symlink\n   restore    Restore working tree files\n   rm         Remove files from the working tree and from the index\n\nexamine the history and state (see also: git help revisions)\n   bisect     Use binary search to find the commit that introduced a bug\n   diff       Show changes between commits, commit and working tree, etc\n   grep       Print lines matching a pattern\n   log        Show commit logs\n   show       Show various types of objects\n   status     Show the working tree status\n\ngrow, mark and tweak your common history\n   backfill   Download missing objects in a partial clone\n   branch     List, create, or delete branches\n   commit     Record changes to the repository\n   merge      Join two or more development histories together\n   rebase     Reapply commits on top of another base tip\n   reset      Reset current HEAD to the specified state\n   switch     Switch branches\n   tag        Create, list, delete or verify a tag object signed with GPG\n\ncollaborate (see also: git help workflows)\n   fetch      Download objects and refs from another repository\n   pull       Fetch from and integrate with another repository or a local branch\n   push       Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.\n""
+[0m16:45:12.778332 [debug] [MainThread]: STDERR: "b''"
+[0m16:45:12.778532 [info ] [MainThread]:  - git [[32mOK found[0m]
+
+[0m16:45:12.778717 [info ] [MainThread]: Connection:
+[0m16:45:12.778898 [info ] [MainThread]:   host: localhost
+[0m16:45:12.779035 [info ] [MainThread]:   port: 5432
+[0m16:45:12.779167 [info ] [MainThread]:   user: skillwatch
+[0m16:45:12.779292 [info ] [MainThread]:   database: skillwatch_warehouse
+[0m16:45:12.779424 [info ] [MainThread]:   schema: public
+[0m16:45:12.779547 [info ] [MainThread]:   connect_timeout: 10
+[0m16:45:12.779678 [info ] [MainThread]:   role: None
+[0m16:45:12.779799 [info ] [MainThread]:   search_path: None
+[0m16:45:12.779921 [info ] [MainThread]:   keepalives_idle: 0
+[0m16:45:12.780039 [info ] [MainThread]:   sslmode: None
+[0m16:45:12.780159 [info ] [MainThread]:   sslcert: None
+[0m16:45:12.780287 [info ] [MainThread]:   sslkey: None
+[0m16:45:12.780404 [info ] [MainThread]:   sslrootcert: None
+[0m16:45:12.780527 [info ] [MainThread]:   application_name: dbt
+[0m16:45:12.780647 [info ] [MainThread]:   autocommit: False
+[0m16:45:12.780766 [info ] [MainThread]:   retries: 1
+[0m16:45:12.781141 [info ] [MainThread]: Registered adapter: postgres=1.11.0
+[0m16:45:12.843429 [debug] [MainThread]: Acquiring new postgres connection 'debug'
+[0m16:45:12.870776 [debug] [MainThread]: Using postgres connection "debug"
+[0m16:45:12.871030 [debug] [MainThread]: On debug: select 1 as id
+[0m16:45:12.871192 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m16:45:12.906381 [debug] [MainThread]: SQL status: SELECT 1 in 0.035 seconds
+[0m16:45:12.906946 [debug] [MainThread]: On debug: Close
+[0m16:45:12.907145 [info ] [MainThread]:   Connection test: [[32mOK connection ok[0m]
+
+[0m16:45:12.907328 [info ] [MainThread]: [31m1 check failed:[0m
+[0m16:45:12.907467 [info ] [MainThread]: Project loading failed for the following reason:
+ project path </Users/antoinegobbe/Desktop/Plateforme/certification/skillwatch/dbt_project.yml> not found
+
+[0m16:45:12.907830 [debug] [MainThread]: Resource report: {"command_name": "debug", "command_success": false, "command_wall_clock_time": 0.25340834, "process_in_blocks": "0", "process_kernel_time": 0.203054, "process_mem_max_rss": "138395648", "process_out_blocks": "0", "process_user_time": 0.844805}
+[0m16:45:12.908133 [debug] [MainThread]: Command `dbt debug` failed at 16:45:12.908066 after 0.25 seconds
+[0m16:45:12.908338 [debug] [MainThread]: Connection 'debug' was properly closed.
+[0m16:45:12.908665 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e1fab10>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10eb704d0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10db67ac0>]}
+[0m16:45:12.908931 [debug] [MainThread]: Flushing usage events
+[0m16:45:20.033949 [debug] [MainThread]: An error was encountered while trying to flush usage events

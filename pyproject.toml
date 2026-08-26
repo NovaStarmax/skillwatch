@@ -19,6 +19,7 @@ dependencies = [
     "python-multipart",
     "python-dotenv",
     "playwright>=1.60.0",
+    "dbt-postgres>=1.11.0",
 ]
 
 [tool.hatch.build.targets.wheel]
