@@ -19,6 +19,13 @@ def get_demographics_engine() -> Engine:
     return create_engine(demographics_url)
 
 
+def get_warehouse_engine() -> Engine:
+    warehouse_url = os.getenv("WAREHOUSE_DATABASE_URL")
+    if not warehouse_url:
+        raise ValueError("WAREHOUSE_DATABASE_URL is not set")
+    return create_engine(warehouse_url)
+
+
 @contextmanager
 def get_connection():
     engine = get_engine()
@@ -33,6 +40,17 @@ def get_connection():
 @contextmanager
 def get_demographics_connection():
     engine = get_demographics_engine()
+    connection = engine.connect()
+    try:
+        yield connection
+    finally:
+        connection.close()
+        engine.dispose()
+
+
+@contextmanager
+def get_warehouse_connection():
+    engine = get_warehouse_engine()
     connection = engine.connect()
     try:
         yield connection

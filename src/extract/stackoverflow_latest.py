@@ -2,6 +2,7 @@ import json
 import sys
 import time
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -11,7 +12,7 @@ from sqlalchemy import text
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.utils.db import get_engine
+from src.utils.db import get_engine, get_warehouse_engine
 from src.utils.logger import get_logger
 
 load_dotenv()
@@ -20,6 +21,7 @@ SURVEY_YEAR = 2025
 DATA_DIR = ROOT / "data" / "raw" / "stackoverflow_latest"
 SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
 UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_stackoverflow.log"
+RAW_TABLE = "raw_stackoverflow_latest"
 
 SKILL_COLUMNS = [
     "LanguageHaveWorkedWith",
@@ -60,6 +62,23 @@ def run() -> None:
     df = pd.read_csv(csv_path, encoding="utf-8", low_memory=False)
     logger.info(f"[STACKOVERFLOW] {len(df)} répondants chargés")
 
+    # === RAW LAYER : chargement quasi brut du CSV, sans matching ni agrégation ===
+    # Ces étapes seront réécrites en dbt (staging/intermediate) à partir de cette table raw.
+    # Écrit dans skillwatch_warehouse (WAREHOUSE_DATABASE_URL), pas dans skillwatch_db.
+    warehouse_engine = get_warehouse_engine()
+    df_raw = df.copy()
+    df_raw["loaded_at"] = datetime.now(timezone.utc)
+    df_raw.to_sql(
+        RAW_TABLE,
+        warehouse_engine,
+        if_exists="replace",
+        index=False
+    )
+    logger.info(f"[STACKOVERFLOW] {len(df_raw)} lignes chargées dans {RAW_TABLE} (raw, skillwatch_warehouse)")
+    # === FIN RAW LAYER ===
+
+    # === PIPELINE EXISTANT (legacy — matching + agrégation + upsert skills/survey_stats) ===
+    # Conservé tel quel pour l'instant, sera supprimé quand les modèles dbt le remplaceront.
     mapping = load_mapping()
 
     # skill_name -> set d'index répondants
