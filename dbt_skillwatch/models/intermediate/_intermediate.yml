@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: int_stackoverflow_skills
+    description: Une ligne par skill canonique — usage_count (répondants distincts) et avg_salary_usd (moyenne, NULL exclus) calculés à partir du unpivot des 5 colonnes skills de stg_stackoverflow_latest, matchées via le seed skills_mapping.
+    columns:
+      - name: canonical_skill
+        description: Nom canonique du skill (colonne skills_mapping.canonical_skill).
+        data_tests:
+          - unique
+          - not_null

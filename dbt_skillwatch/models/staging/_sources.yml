@@ -1,0 +1,28 @@
+version: 2
+
+sources:
+  - name: raw
+    database: skillwatch_warehouse
+    schema: public
+    tables:
+      - name: stackoverflow_latest
+        identifier: raw_stackoverflow_latest
+        description: >
+          Chargement quasi brut du CSV Stack Overflow Developer Survey (édition la plus récente), une ligne par répondant.
+          Note : MiscTechHaveWorkedWith n'existe pas dans cette édition (colonne retirée par Stack Overflow d'une année sur l'autre) — absent volontairement des colonnes déclarées ci-dessous.
+        loaded_at_field: loaded_at
+        columns:
+          - name: ResponseId
+            description: Identifiant unique du répondant.
+          - name: LanguageHaveWorkedWith
+            description: Langages utilisés, valeurs séparées par ";".
+          - name: DatabaseHaveWorkedWith
+            description: Bases de données utilisées, valeurs séparées par ";".
+          - name: PlatformHaveWorkedWith
+            description: Plateformes/cloud utilisées, valeurs séparées par ";".
+          - name: WebframeHaveWorkedWith
+            description: Frameworks web utilisés, valeurs séparées par ";".
+          - name: ConvertedCompYearly
+            description: Rémunération annuelle convertie en USD.
+          - name: loaded_at
+            description: Horodatage du chargement dans la table raw.

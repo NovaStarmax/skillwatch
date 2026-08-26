@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: stg_stackoverflow_latest
+    description: Une ligne par répondant Stack Overflow, colonnes renommées en snake_case, salaire casté en numeric. Format "large" conservé (skills toujours sous forme de chaînes délimitées par ";").
+    columns:
+      - name: response_id
+        description: Identifiant unique du répondant.
+        data_tests:
+          - unique
+          - not_null
+      - name: salary_usd
+        description: Rémunération annuelle en USD. Nullable — environ 51% des répondants ne renseignent pas cette question dans l'enquête source, ce n'est pas une anomalie de données.
