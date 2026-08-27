@@ -1,6 +1,7 @@
 import json
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -12,7 +13,7 @@ from sqlalchemy import text
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.utils.db import get_engine
+from src.utils.db import get_engine, get_warehouse_engine
 from src.utils.logger import get_logger
 
 load_dotenv()
@@ -20,6 +21,7 @@ load_dotenv()
 ARCHIVE_DIR = ROOT / "data" / "raw" / "stackoverflow_archive"
 SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
 UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_spark.log"
+RAW_TABLE = "raw_stackoverflow_archive"
 
 # Colonnes multi-valeurs stables (présentes sur toutes les années)
 STABLE_COLS = [
@@ -89,6 +91,7 @@ def run() -> None:
 
     start = time.time()
     skill_frames = []
+    raw_frames = []
     total_respondents = 0
     years_loaded = []
 
@@ -116,6 +119,17 @@ def run() -> None:
         available_cols = set(df.columns)
         skill_cols_found = [c for c in STABLE_COLS + OPTIONAL_COLS if c in available_cols]
         useful_col_count = len(skill_cols_found) + (1 if SALARY_COL in available_cols else 0)
+
+        # === RAW LAYER : capture quasi brute de ce fichier, format large (une ligne par répondant) ===
+        raw_frames.append(
+            df.select(
+                col("ResponseId").alias("response_id"),
+                col("survey_year"),
+                *[col(c) for c in skill_cols_found],
+                col(SALARY_COL).alias("ConvertedCompYearly"),
+            )
+        )
+        # === FIN RAW LAYER (collecte) ===
 
         n_rows = df.count()
         total_respondents += n_rows
@@ -148,6 +162,32 @@ def run() -> None:
     logger.info(
         f"[SPARK] Total: {total_respondents} répondants sur {len(years_loaded)} années"
     )
+
+    # === RAW LAYER : union des fichiers + écriture quasi brute dans skillwatch_warehouse ===
+    # Une ligne par répondant par année, format large (skills encore délimités par ";"),
+    # sans unpivot ni matching. Clé logique : (survey_year, response_id) — response_id
+    # repart à 1 chaque année, donc pas de contrainte unique sur response_id seul.
+    # Écrit dans skillwatch_warehouse (WAREHOUSE_DATABASE_URL), pas dans skillwatch_db.
+    if raw_frames:
+        combined_raw = raw_frames[0]
+        for frame in raw_frames[1:]:
+            combined_raw = combined_raw.union(frame)
+
+        warehouse_engine = get_warehouse_engine()
+        df_raw = combined_raw.toPandas()
+        df_raw["loaded_at"] = datetime.now(timezone.utc)
+        df_raw.to_sql(
+            RAW_TABLE,
+            warehouse_engine,
+            if_exists="replace",
+            index=False,
+            method="multi",
+            chunksize=5000,
+        )
+        logger.info(f"[SPARK] {len(df_raw)} lignes chargées dans {RAW_TABLE} (raw, skillwatch_warehouse)")
+    else:
+        logger.warning("[SPARK] Aucune donnée à charger dans le raw layer")
+    # === FIN RAW LAYER ===
 
     if not skill_frames:
         logger.error("[SPARK] Aucune donnée exploitable après lecture des fichiers")
