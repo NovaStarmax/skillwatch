@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: stackoverflow_skills
+    description: >
+      Table finale (matérialisée) — une ligne par skill canonique et par année, toutes sources
+      confondues : int_stackoverflow_skills (CSV latest, survey_year fixé à 2025) union
+      int_stackoverflow_archive_skills (archive 2021-2024). Destinée à la lecture fréquente
+      (future API), contrairement aux staging/intermediate qui restent des vues de calcul.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - canonical_skill
+              - survey_year
+    columns:
+      - name: canonical_skill
+        description: Nom canonique du skill (colonne skills_mapping.canonical_skill).
+        data_tests:
+          - not_null
+      - name: survey_year
+        description: Année de l'enquête (2021 à 2025).
+        data_tests:
+          - not_null
+      - name: usage_count
+        description: Nombre de répondants distincts ayant ce skill, pour cette année.
+        data_tests:
+          - not_null
+      - name: avg_salary_usd
+        description: Salaire annuel moyen en USD des répondants ayant ce skill, pour cette année (NULL exclus du calcul).
+        data_tests:
+          - not_null

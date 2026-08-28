@@ -2,8 +2,10 @@ import json
 import re
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
+import pandas as pd
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from sqlalchemy import text
@@ -11,7 +13,7 @@ from sqlalchemy import text
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.utils.db import get_engine
+from src.utils.db import get_engine, get_warehouse_engine
 from src.utils.logger import get_logger
 
 load_dotenv()
@@ -20,6 +22,8 @@ URL = "https://openclassrooms.com/fr/paths"
 HTML_PATH = ROOT / "data" / "raw" / "scraping" / "openclassrooms.html"
 SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
 UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_openclassrooms.log"
+RAW_TRAININGS_TABLE = "raw_openclassrooms_trainings"
+RAW_SKILLS_TABLE = "raw_openclassrooms_skills"
 
 ALLOWED_DOMAINS = {"Data", "Développement", "Systèmes & Réseaux", "Cybersécurité"}
 
@@ -208,9 +212,7 @@ def fetch_detail_html(url: str, slug: str, logger) -> str:
     return html
 
 
-def extract_skills_from_detail(
-    html: str, slug: str, logger, skills_mapping: dict[str, str]
-) -> list[str]:
+def extract_skills_from_detail(html: str, slug: str, logger) -> list[str]:
     if not html:
         return []
 
@@ -251,16 +253,25 @@ def extract_skills_from_detail(
         logger.warning(f"[SCRAPING] Aucune compétence trouvée dans aside: {slug}")
         return []
 
+    normalized_skills = [raw.strip().lower() for raw in skills_raw]
+    logger.info(
+        f"[SCRAPING] {slug}: {len(normalized_skills)} skills extraits ({', '.join(normalized_skills[:3])}...)"
+    )
+    return normalized_skills
+
+
+def match_skills(
+    skills_raw: list[str], skills_mapping: dict[str, str], slug: str, logger
+) -> list[str]:
     matched = []
     unmatched = []
-    for raw in skills_raw:
-        normalized = raw.strip().lower()
+    for normalized in skills_raw:
         if normalized in skills_mapping:
             canonical = skills_mapping[normalized]
             if canonical not in matched:
                 matched.append(canonical)
         else:
-            unmatched.append(raw)
+            unmatched.append(normalized)
 
     if unmatched:
         with open(UNMATCHED_LOG, "a", encoding="utf-8") as f:
@@ -268,7 +279,6 @@ def extract_skills_from_detail(
                 f.write(f"[UNMATCHED] source: openclassrooms_detail | slug: {slug} | value: {u}\n")
         logger.warning(f"[SCRAPING] {len(unmatched)} tags non reconnus pour {slug} → unmatched.log")
 
-    logger.info(f"[SCRAPING] {slug}: {len(matched)} skills extraits ({', '.join(matched[:3])}...)")
     return matched
 
 
@@ -292,22 +302,58 @@ def run() -> None:
 
     # --- Phase 1 : scraping des pages détail ---
     logger.info(f"[SCRAPING] Début scraping détails | {len(formations)} formations à traiter")
-    formation_skills: dict[str, list[str]] = {}
+    formation_skills_raw: dict[str, list[str]] = {}
+    formation_skills_matched: dict[str, list[str]] = {}
     detail_real = 0
 
     for formation in formations:
         url = formation["url"]
         slug = url.rstrip("/").split("/")[-1]
         detail_html = fetch_detail_html(url, slug, logger)
-        skills = extract_skills_from_detail(detail_html, slug, logger, skills_mapping)
-        formation_skills[url] = skills
-        if skills:
+        skills_raw = extract_skills_from_detail(detail_html, slug, logger)
+        formation_skills_raw[url] = skills_raw
+        formation_skills_matched[url] = match_skills(skills_raw, skills_mapping, slug, logger)
+        if skills_raw:
             detail_real += 1
 
     logger.info(
         f"[SCRAPING] Détails terminés | {detail_real} formations avec skills réels"
         f" | {len(formations) - detail_real} fallbacks JSON"
     )
+
+    # === RAW LAYER : formations quasi brutes + couples (url, skill_raw), sans matching ===
+    # Écrit dans skillwatch_warehouse (WAREHOUSE_DATABASE_URL), pas dans skillwatch_db.
+    warehouse_engine = get_warehouse_engine()
+
+    df_trainings = pd.DataFrame(formations)
+    df_trainings["loaded_at"] = datetime.now(timezone.utc)
+    df_trainings.to_sql(
+        RAW_TRAININGS_TABLE,
+        warehouse_engine,
+        if_exists="replace",
+        index=False,
+        method="multi",
+        chunksize=5000,
+    )
+    logger.info(f"[SCRAPING] {len(df_trainings)} lignes chargées dans {RAW_TRAININGS_TABLE} (raw, skillwatch_warehouse)")
+
+    skills_rows = [
+        {"url": url, "skill_raw": skill}
+        for url, skills in formation_skills_raw.items()
+        for skill in skills
+    ]
+    df_skills = pd.DataFrame(skills_rows, columns=["url", "skill_raw"])
+    df_skills["loaded_at"] = datetime.now(timezone.utc)
+    df_skills.to_sql(
+        RAW_SKILLS_TABLE,
+        warehouse_engine,
+        if_exists="replace",
+        index=False,
+        method="multi",
+        chunksize=5000,
+    )
+    logger.info(f"[SCRAPING] {len(df_skills)} lignes chargées dans {RAW_SKILLS_TABLE} (raw, skillwatch_warehouse)")
+    # === FIN RAW LAYER ===
 
     # --- Phase 2 : upsert ---
     matched_count = 0
@@ -349,7 +395,7 @@ def run() -> None:
             training_count += 1
 
             # Skills : depuis scraping détail uniquement
-            skills = formation_skills.get(formation["url"]) or []
+            skills = formation_skills_matched.get(formation["url"]) or []
             if not skills:
                 logger.warning(f"[SCRAPING] Aucun skill trouvé pour: {formation['title']}")
                 unmatched_count += 1
