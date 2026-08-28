@@ -11,3 +11,23 @@ models:
           - not_null
       - name: salary_usd
         description: Rémunération annuelle en USD. Nullable — environ 51% des répondants ne renseignent pas cette question dans l'enquête source, ce n'est pas une anomalie de données.
+
+  - name: stg_stackoverflow_archive
+    description: Une ligne par répondant par année Stack Overflow (archive 2021-2024), colonnes renommées en snake_case, salaire casté en numeric. Format "large" conservé (skills toujours sous forme de chaînes délimitées par ";"). Clé logique composite (survey_year, response_id) — response_id repart à 1 chaque année.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - survey_year
+              - response_id
+    columns:
+      - name: response_id
+        description: Identifiant du répondant, unique seulement au sein d'une année donnée (pas de contrainte unique seule ici — cf. test composite ci-dessus).
+        data_tests:
+          - not_null
+      - name: survey_year
+        description: Année de l'enquête (2021 à 2024).
+        data_tests:
+          - not_null
+      - name: salary_usd
+        description: Rémunération annuelle en USD. Nullable — non-réponse à la question dans l'enquête source, ce n'est pas une anomalie de données.

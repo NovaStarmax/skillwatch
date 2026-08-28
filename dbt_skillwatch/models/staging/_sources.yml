@@ -26,3 +26,31 @@ sources:
             description: Rémunération annuelle convertie en USD.
           - name: loaded_at
             description: Horodatage du chargement dans la table raw.
+
+      - name: stackoverflow_archive
+        identifier: raw_stackoverflow_archive
+        description: >
+          Chargement quasi brut des CSV Stack Overflow Developer Survey (archive 2021-2024, un fichier par année),
+          une ligne par répondant par année. Clé logique (survey_year, response_id) : response_id repart à 1 chaque année.
+        loaded_at_field: loaded_at
+        columns:
+          - name: response_id
+            description: Identifiant du répondant, unique seulement au sein d'une année donnée.
+          - name: survey_year
+            description: Année de l'enquête, extraite du nom du fichier CSV source.
+          - name: LanguageHaveWorkedWith
+            description: Langages utilisés, valeurs séparées par ";".
+          - name: DatabaseHaveWorkedWith
+            description: Bases de données utilisées, valeurs séparées par ";".
+          - name: PlatformHaveWorkedWith
+            description: Plateformes/cloud utilisées, valeurs séparées par ";".
+          - name: WebframeHaveWorkedWith
+            description: Frameworks web utilisés, valeurs séparées par ";".
+          - name: MiscTechHaveWorkedWith
+            description: Technologies diverses utilisées, valeurs séparées par ";".
+          - name: ToolsTechHaveWorkedWith
+            description: Outils utilisés, valeurs séparées par ";".
+          - name: ConvertedCompYearly
+            description: Rémunération annuelle convertie en USD.
+          - name: loaded_at
+            description: Horodatage du chargement dans la table raw.

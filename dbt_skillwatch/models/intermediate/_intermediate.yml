@@ -9,3 +9,21 @@ models:
         data_tests:
           - unique
           - not_null
+
+  - name: int_stackoverflow_archive_skills
+    description: Une ligne par skill canonique et par année (2021-2024) — usage_count (répondants distincts de l'année) et avg_salary_usd (moyenne, NULL exclus) calculés à partir du unpivot des 6 colonnes skills de stg_stackoverflow_archive, matchées via le seed skills_mapping.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - canonical_skill
+              - survey_year
+    columns:
+      - name: canonical_skill
+        description: Nom canonique du skill (colonne skills_mapping.canonical_skill).
+        data_tests:
+          - not_null
+      - name: survey_year
+        description: Année de l'enquête (2021 à 2024).
+        data_tests:
+          - not_null
