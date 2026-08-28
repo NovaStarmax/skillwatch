@@ -27,3 +27,21 @@ models:
         description: Année de l'enquête (2021 à 2024).
         data_tests:
           - not_null
+
+  - name: int_openclassrooms_skills
+    description: Relation formation ↔ skill canonique — une ligne par (url, canonical_skill), déduite du unpivot déjà fait côté raw et matchée via le seed skills_mapping.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - url
+              - canonical_skill
+    columns:
+      - name: url
+        description: URL de la formation (référence stg_openclassrooms_trainings.url).
+        data_tests:
+          - not_null
+      - name: canonical_skill
+        description: Nom canonique du skill (colonne skills_mapping.canonical_skill).
+        data_tests:
+          - not_null

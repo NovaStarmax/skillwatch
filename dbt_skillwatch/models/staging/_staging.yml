@@ -31,3 +31,24 @@ models:
           - not_null
       - name: salary_usd
         description: Rémunération annuelle en USD. Nullable — non-réponse à la question dans l'enquête source, ce n'est pas une anomalie de données.
+
+  - name: stg_openclassrooms_trainings
+    description: Une ligne par formation OpenClassrooms retenue après filtre domaine.
+    columns:
+      - name: url
+        description: URL de la formation, identifiant logique unique.
+        data_tests:
+          - unique
+          - not_null
+
+  - name: stg_openclassrooms_skills
+    description: Un skill brut par ligne pour chaque formation (une formation a plusieurs lignes) — pas de contrainte d'unicité sur url seul ici.
+    columns:
+      - name: url
+        description: URL de la formation (référence stg_openclassrooms_trainings.url).
+        data_tests:
+          - not_null
+      - name: skill_raw
+        description: Skill brut extrait de la page détail, non matché contre le mapping.
+        data_tests:
+          - not_null

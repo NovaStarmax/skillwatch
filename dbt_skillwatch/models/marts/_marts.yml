@@ -30,3 +30,30 @@ models:
         description: Salaire annuel moyen en USD des répondants ayant ce skill, pour cette année (NULL exclus du calcul).
         data_tests:
           - not_null
+
+  - name: trainings
+    description: Table finale (matérialisée) — une ligne par formation OpenClassrooms retenue, reprend stg_openclassrooms_trainings tel quel. Équivalent du schéma legacy trainings (skillwatch_db).
+    columns:
+      - name: url
+        description: URL de la formation, identifiant logique unique.
+        data_tests:
+          - unique
+          - not_null
+
+  - name: training_skills
+    description: Table finale (matérialisée) — relation formation ↔ skill canonique, reprend int_openclassrooms_skills tel quel. Équivalent du schéma legacy training_skills (skillwatch_db).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - url
+              - canonical_skill
+    columns:
+      - name: url
+        description: URL de la formation (référence trainings.url).
+        data_tests:
+          - not_null
+      - name: canonical_skill
+        description: Nom canonique du skill (colonne skills_mapping.canonical_skill).
+        data_tests:
+          - not_null

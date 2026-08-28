@@ -27,6 +27,42 @@ sources:
           - name: loaded_at
             description: Horodatage du chargement dans la table raw.
 
+      - name: openclassrooms_trainings
+        identifier: raw_openclassrooms_trainings
+        description: >
+          Chargement quasi brut des formations OpenClassrooms scrapées, une ligne par formation
+          retenue après filtre domaine (Data, Développement, Systèmes & Réseaux, Cybersécurité).
+        loaded_at_field: loaded_at
+        columns:
+          - name: title
+            description: Titre de la formation.
+          - name: domain
+            description: Domaine de la formation.
+          - name: level
+            description: Niveau de la formation.
+          - name: duration_months
+            description: Durée de la formation en mois (temps plein).
+          - name: url
+            description: URL de la page formation, identifiant logique unique.
+          - name: provider
+            description: Toujours "OpenClassrooms".
+          - name: loaded_at
+            description: Horodatage du chargement dans la table raw.
+
+      - name: openclassrooms_skills
+        identifier: raw_openclassrooms_skills
+        description: >
+          Couples (url, skill_raw) — un skill brut extrait par ligne, pour chaque formation traitée
+          (page détail scrapée), texte libre non matché contre le mapping.
+        loaded_at_field: loaded_at
+        columns:
+          - name: url
+            description: URL de la formation (référence vers openclassrooms_trainings.url).
+          - name: skill_raw
+            description: Skill brut extrait de la page détail, normalisé en lowercase/trim, non matché.
+          - name: loaded_at
+            description: Horodatage du chargement dans la table raw.
+
       - name: stackoverflow_archive
         identifier: raw_stackoverflow_archive
         description: >
