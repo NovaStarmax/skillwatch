@@ -26,6 +26,9 @@ clean-targets:         # directories to be removed by `dbt clean`
 # marts sont matérialisés en table pour la lecture fréquente. Les marts ont aussi leur
 # config(materialized='table') explicite par fichier ; ce bloc évite qu'un futur modèle
 # retombe silencieusement en view faute de config.
+# +schema: marts (avec macros/generate_schema_name.sql) : les 5 modèles marts atterrissent
+# dans skillwatch_warehouse.marts.*, pas public_marts.* — plus propre qu'un config répété
+# par fichier.
 models:
   dbt_skillwatch:
     staging:
@@ -34,3 +37,4 @@ models:
       +materialized: view
     marts:
       +materialized: table
+      +schema: marts

@@ -33,7 +33,7 @@ def run() -> None:
     with open(SKILLS_MAPPING_PATH, encoding="utf-8") as f:
         mapping: dict[str, str] = json.load(f)
 
-    df = pd.read_sql_table(RAW_TABLE, warehouse_engine)
+    df = pd.read_sql_table(RAW_TABLE, warehouse_engine, schema="raw")
     logger.info(f"[MATCH FT] {len(df)} offres chargées depuis {RAW_TABLE}")
 
     rows = []

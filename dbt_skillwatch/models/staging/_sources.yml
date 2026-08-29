@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: raw
     database: skillwatch_warehouse
-    schema: public
+    schema: raw
     tables:
       - name: stackoverflow_latest
         identifier: raw_stackoverflow_latest

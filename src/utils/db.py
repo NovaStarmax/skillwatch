@@ -51,7 +51,7 @@ def get_demographics_connection():
         engine.dispose()
 
 
-def replace_raw_table(engine: Engine, table_name: str, df: pd.DataFrame) -> None:
+def replace_raw_table(engine: Engine, table_name: str, df: pd.DataFrame, schema: str = "raw") -> None:
     """Remplace le contenu d'une table raw dans une seule transaction (TRUNCATE + append),
     contrairement à to_sql(if_exists="replace") qui DROP puis recrée la table hors
     transaction : une requête concurrente ou un `dbt build` lancé entre les deux peut
@@ -59,12 +59,13 @@ def replace_raw_table(engine: Engine, table_name: str, df: pd.DataFrame) -> None
     DROPée). TRUNCATE reste dans la même transaction que l'insertion : soit tout est
     visible (ancien contenu jusqu'au commit, puis nouveau), soit rien ne change (rollback).
     Premier run (table absente) : le TRUNCATE échoue en UndefinedTable, on laisse to_sql
-    créer la table normalement dans la même transaction.
+    créer la table normalement dans la même transaction. Cible le schéma raw par défaut
+    (skillwatch_warehouse.raw.*), séparé de public où vivent les seeds et les modèles dbt.
     """
     with engine.begin() as conn:
         savepoint = conn.begin_nested()
         try:
-            conn.execute(text(f'TRUNCATE TABLE "{table_name}"'))
+            conn.execute(text(f'TRUNCATE TABLE "{schema}"."{table_name}"'))
             savepoint.commit()
         except ProgrammingError as e:
             savepoint.rollback()
@@ -73,6 +74,7 @@ def replace_raw_table(engine: Engine, table_name: str, df: pd.DataFrame) -> None
         df.to_sql(
             table_name,
             conn,
+            schema=schema,
             if_exists="append",
             index=False,
             method="multi",
