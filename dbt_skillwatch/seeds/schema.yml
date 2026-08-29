@@ -8,3 +8,14 @@ seeds:
       - name: population
         data_tests:
           - not_null
+
+  - name: skills_mapping
+    description: Référentiel alias → skill canonique (~450 entrées), joint dans les modèles staging/intermediate de 3 sources (Stack Overflow latest/archive, OpenClassrooms). Un alias dupliqué dupliquerait silencieusement les lignes de toutes ces jointures.
+    columns:
+      - name: alias
+        data_tests:
+          - unique
+          - not_null
+      - name: canonical_skill
+        data_tests:
+          - not_null

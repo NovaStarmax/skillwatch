@@ -69,6 +69,12 @@ models:
 
   - name: job_offer_skills
     description: Table finale (matérialisée) — relation offre ↔ skill canonique, reprend stg_france_travail_skills tel quel. Équivalent de l'ancienne table de jointure legacy job_offer_skills (skillwatch_db).
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - external_id
+              - canonical_skill
     columns:
       - name: external_id
         description: Identifiant de l'offre (référence job_offers.external_id).
