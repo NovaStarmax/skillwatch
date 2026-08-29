@@ -45,3 +45,12 @@ models:
         description: Nom canonique du skill (colonne skills_mapping.canonical_skill).
         data_tests:
           - not_null
+
+  - name: int_france_travail_offers
+    description: Une ligne par offre France Travail — salaire parsé (salary_min/salary_max, reproduction fidèle de parse_salary()) et enrichissement démographique (dept_population, left join sur le seed departments — certaines offres n'ont pas de département correspondant, NULL volontaire plutôt qu'une perte de ligne).
+    columns:
+      - name: external_id
+        description: Identifiant de l'offre, identifiant logique unique.
+        data_tests:
+          - unique
+          - not_null

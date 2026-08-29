@@ -63,6 +63,50 @@ sources:
           - name: loaded_at
             description: Horodatage du chargement dans la table raw.
 
+      - name: france_travail
+        identifier: raw_france_travail
+        description: >
+          Chargement quasi brut des offres d'emploi France Travail (mots-clés data engineer,
+          data scientist, développeur python, machine learning), une ligne par offre déduplicée
+          sur external_id. Sans parsing salaire ni matching skills — juste la réponse API aplatie.
+        loaded_at_field: loaded_at
+        columns:
+          - name: external_id
+            description: Identifiant de l'offre côté France Travail, identifiant logique unique.
+          - name: title
+            description: Intitulé de l'offre.
+          - name: description
+            description: Description de l'offre.
+          - name: company
+            description: Nom de l'entreprise (peut être absent selon l'offre).
+          - name: location
+            description: Libellé du lieu de travail.
+          - name: commune
+            description: Code commune INSEE du lieu de travail ; les 2 premiers caractères donnent le département. Chaîne vide si non renseigné par l'API.
+          - name: contract_type
+            description: Type de contrat.
+          - name: published_at
+            description: Date de création de l'offre, telle que renvoyée par l'API (texte).
+          - name: salaire_libelle
+            description: Libellé salaire brut tel que renvoyé par l'API, à parser (ex. "Annuel de 45000.0 Euros à 50000.0 Euros sur 12 mois").
+          - name: loaded_at
+            description: Horodatage du chargement dans la table raw.
+
+      - name: france_travail_skills_matched
+        identifier: raw_france_travail_skills_matched
+        description: >
+          Couples (external_id, canonical_skill) déjà matchés côté Python (script de matching
+          indépendant et replayable, network-free) — pas de jointure skills_mapping nécessaire ici
+          contrairement aux autres sources.
+        loaded_at_field: loaded_at
+        columns:
+          - name: external_id
+            description: Identifiant de l'offre (référence raw_france_travail.external_id).
+          - name: canonical_skill
+            description: Nom canonique du skill déjà matché.
+          - name: loaded_at
+            description: Horodatage du chargement dans la table raw.
+
       - name: stackoverflow_archive
         identifier: raw_stackoverflow_archive
         description: >

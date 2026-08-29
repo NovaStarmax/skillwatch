@@ -57,3 +57,24 @@ models:
         description: Nom canonique du skill (colonne skills_mapping.canonical_skill).
         data_tests:
           - not_null
+
+  - name: job_offers
+    description: Table finale (matérialisée) — une ligne par offre France Travail, reprend int_france_travail_offers tel quel. Équivalent du schéma legacy job_offers (skillwatch_db, filtré sur source = 'france_travail').
+    columns:
+      - name: external_id
+        description: Identifiant de l'offre, identifiant logique unique.
+        data_tests:
+          - unique
+          - not_null
+
+  - name: job_offer_skills
+    description: Table finale (matérialisée) — relation offre ↔ skill canonique, reprend stg_france_travail_skills tel quel. Équivalent de l'ancienne table de jointure legacy job_offer_skills (skillwatch_db).
+    columns:
+      - name: external_id
+        description: Identifiant de l'offre (référence job_offers.external_id).
+        data_tests:
+          - not_null
+      - name: canonical_skill
+        description: Nom canonique du skill déjà matché.
+        data_tests:
+          - not_null

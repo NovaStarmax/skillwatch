@@ -52,3 +52,24 @@ models:
         description: Skill brut extrait de la page détail, non matché contre le mapping.
         data_tests:
           - not_null
+
+  - name: stg_france_travail
+    description: Une ligne par offre France Travail déduplicée, colonnes reprises telles quelles depuis raw_france_travail — aucun parsing salaire ni jointure ici.
+    columns:
+      - name: external_id
+        description: Identifiant de l'offre, identifiant logique unique.
+        data_tests:
+          - unique
+          - not_null
+
+  - name: stg_france_travail_skills
+    description: Relation offre ↔ skill canonique déjà matchée côté Python — pas de jointure skills_mapping nécessaire ici contrairement aux autres sources.
+    columns:
+      - name: external_id
+        description: Identifiant de l'offre (référence stg_france_travail.external_id).
+        data_tests:
+          - not_null
+      - name: canonical_skill
+        description: Nom canonique du skill déjà matché.
+        data_tests:
+          - not_null
