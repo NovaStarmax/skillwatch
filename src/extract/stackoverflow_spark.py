@@ -13,7 +13,7 @@ from sqlalchemy import text
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.utils.db import get_engine, get_warehouse_engine
+from src.utils.db import get_engine, get_warehouse_engine, replace_raw_table
 from src.utils.logger import get_logger
 
 load_dotenv()
@@ -176,14 +176,7 @@ def run() -> None:
         warehouse_engine = get_warehouse_engine()
         df_raw = combined_raw.toPandas()
         df_raw["loaded_at"] = datetime.now(timezone.utc)
-        df_raw.to_sql(
-            RAW_TABLE,
-            warehouse_engine,
-            if_exists="replace",
-            index=False,
-            method="multi",
-            chunksize=5000,
-        )
+        replace_raw_table(warehouse_engine, RAW_TABLE, df_raw)
         logger.info(f"[SPARK] {len(df_raw)} lignes chargées dans {RAW_TABLE} (raw, skillwatch_warehouse)")
     else:
         logger.warning("[SPARK] Aucune donnée à charger dans le raw layer")

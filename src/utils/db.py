@@ -1,8 +1,11 @@
 import os
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine
+import pandas as pd
+from psycopg2 import errors as psycopg2_errors
+from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import ProgrammingError
 
 
 def get_engine() -> Engine:
@@ -46,6 +49,35 @@ def get_demographics_connection():
     finally:
         connection.close()
         engine.dispose()
+
+
+def replace_raw_table(engine: Engine, table_name: str, df: pd.DataFrame) -> None:
+    """Remplace le contenu d'une table raw dans une seule transaction (TRUNCATE + append),
+    contrairement à to_sql(if_exists="replace") qui DROP puis recrée la table hors
+    transaction : une requête concurrente ou un `dbt build` lancé entre les deux peut
+    alors voir la table absente, et toute vue dbt construite dessus casse (dépendance
+    DROPée). TRUNCATE reste dans la même transaction que l'insertion : soit tout est
+    visible (ancien contenu jusqu'au commit, puis nouveau), soit rien ne change (rollback).
+    Premier run (table absente) : le TRUNCATE échoue en UndefinedTable, on laisse to_sql
+    créer la table normalement dans la même transaction.
+    """
+    with engine.begin() as conn:
+        savepoint = conn.begin_nested()
+        try:
+            conn.execute(text(f'TRUNCATE TABLE "{table_name}"'))
+            savepoint.commit()
+        except ProgrammingError as e:
+            savepoint.rollback()
+            if not isinstance(e.orig, psycopg2_errors.UndefinedTable):
+                raise
+        df.to_sql(
+            table_name,
+            conn,
+            if_exists="append",
+            index=False,
+            method="multi",
+            chunksize=5000,
+        )
 
 
 @contextmanager

@@ -13,7 +13,7 @@ from sqlalchemy import text
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.utils.db import get_engine, get_warehouse_engine
+from src.utils.db import get_engine, get_warehouse_engine, replace_raw_table
 from src.utils.logger import get_logger
 
 load_dotenv()
@@ -327,14 +327,7 @@ def run() -> None:
 
     df_trainings = pd.DataFrame(formations)
     df_trainings["loaded_at"] = datetime.now(timezone.utc)
-    df_trainings.to_sql(
-        RAW_TRAININGS_TABLE,
-        warehouse_engine,
-        if_exists="replace",
-        index=False,
-        method="multi",
-        chunksize=5000,
-    )
+    replace_raw_table(warehouse_engine, RAW_TRAININGS_TABLE, df_trainings)
     logger.info(f"[SCRAPING] {len(df_trainings)} lignes chargées dans {RAW_TRAININGS_TABLE} (raw, skillwatch_warehouse)")
 
     skills_rows = [
@@ -344,14 +337,7 @@ def run() -> None:
     ]
     df_skills = pd.DataFrame(skills_rows, columns=["url", "skill_raw"])
     df_skills["loaded_at"] = datetime.now(timezone.utc)
-    df_skills.to_sql(
-        RAW_SKILLS_TABLE,
-        warehouse_engine,
-        if_exists="replace",
-        index=False,
-        method="multi",
-        chunksize=5000,
-    )
+    replace_raw_table(warehouse_engine, RAW_SKILLS_TABLE, df_skills)
     logger.info(f"[SCRAPING] {len(df_skills)} lignes chargées dans {RAW_SKILLS_TABLE} (raw, skillwatch_warehouse)")
     # === FIN RAW LAYER ===
 

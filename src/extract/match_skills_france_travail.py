@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.utils.db import get_warehouse_engine
+from src.utils.db import get_warehouse_engine, replace_raw_table
 from src.utils.logger import get_logger
 
 load_dotenv()
@@ -63,14 +63,7 @@ def run() -> None:
 
     df_matched = pd.DataFrame(rows, columns=["external_id", "canonical_skill"])
     df_matched["loaded_at"] = datetime.now(timezone.utc)
-    df_matched.to_sql(
-        MATCHED_TABLE,
-        warehouse_engine,
-        if_exists="replace",
-        index=False,
-        method="multi",
-        chunksize=5000,
-    )
+    replace_raw_table(warehouse_engine, MATCHED_TABLE, df_matched)
     logger.info(
         f"[MATCH FT] {len(df_matched)} liaisons (external_id, canonical_skill) chargées dans {MATCHED_TABLE}"
     )
