@@ -3,8 +3,10 @@ import os
 import re
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
+import pandas as pd
 import requests
 from dotenv import load_dotenv
 from sqlalchemy import text
@@ -12,7 +14,7 @@ from sqlalchemy import text
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.utils.db import get_demographics_engine, get_engine
+from src.utils.db import get_demographics_engine, get_engine, get_warehouse_engine
 from src.utils.logger import get_logger
 
 load_dotenv()
@@ -22,6 +24,7 @@ SEARCH_URL = "https://api.francetravail.io/partenaire/offresdemploi/v2/offres/se
 KEYWORDS = ["data engineer", "data scientist", "développeur python", "machine learning"]
 SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
 UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_france_travail.log"
+RAW_TABLE = "raw_france_travail"
 
 _token: str | None = None
 _expires_at: float = 0.0
@@ -90,6 +93,9 @@ def fetch_offers(keyword: str, logger) -> list[dict]:
     return []
 
 
+# === LEGACY : pipeline de démo existant (parsing salaire, enrichissement démographique,
+# matching skills, upsert job_offers/skills/job_offer_skills dans skillwatch_db).
+# Conservé tel quel, tourne en parallèle du raw layer — comme pour les 3 sources précédentes.
 def parse_salary(libelle: str | None) -> tuple[int | None, int | None]:
     if not libelle:
         return None, None
@@ -124,20 +130,29 @@ def upsert_skill(canonical: str, conn) -> int | None:
         {"name": canonical},
     ).fetchone()
     return row[0] if row else None
+# === FIN LEGACY (fonctions) ===
 
 
 def run() -> None:
     logger = get_logger("france_travail")
 
-    # Connexion warehouse (obligatoire)
+    # Connexion warehouse (raw layer, obligatoire)
     try:
-        warehouse_engine = get_engine()
+        warehouse_engine = get_warehouse_engine()
         warehouse_engine.connect().close()
+    except Exception as e:
+        logger.error(f"[FRANCE TRAVAIL] WAREHOUSE_DATABASE_URL inaccessible: {e}")
+        sys.exit(1)
+
+    # Connexion legacy skillwatch_db (obligatoire, pipeline de démo)
+    try:
+        legacy_engine = get_engine()
+        legacy_engine.connect().close()
     except Exception as e:
         logger.error(f"[FRANCE TRAVAIL] DATABASE_URL inaccessible: {e}")
         sys.exit(1)
 
-    # Connexion demographics (optionnelle)
+    # Connexion demographics (optionnelle, legacy)
     demo_engine = None
     try:
         demo_engine = get_demographics_engine()
@@ -168,7 +183,40 @@ def run() -> None:
         f"[FRANCE TRAVAIL] Total brut: {len(raw_offers)} | {len(unique_offers)} uniques après déduplication"
     )
 
-    # Chargement du mapping skills
+    # === RAW LAYER : écriture brute, sans parsing salaire ni matching skills ===
+    # Écrit dans skillwatch_warehouse (WAREHOUSE_DATABASE_URL), pas dans skillwatch_db.
+    raw_rows = []
+    for offer in unique_offers:
+        lieu = offer.get("lieuTravail") or {}
+        raw_rows.append({
+            "external_id": offer.get("id"),
+            "title": offer.get("intitule", "") or "",
+            "description": offer.get("description", "") or "",
+            "company": (offer.get("entreprise") or {}).get("nom"),
+            "location": lieu.get("libelle"),
+            "commune": lieu.get("commune") or "",
+            "contract_type": offer.get("typeContrat"),
+            "published_at": offer.get("dateCreation"),
+            "salaire_libelle": (offer.get("salaire") or {}).get("libelle"),
+        })
+
+    df_raw = pd.DataFrame(raw_rows, columns=[
+        "external_id", "title", "description", "company", "location",
+        "commune", "contract_type", "published_at", "salaire_libelle",
+    ])
+    df_raw["loaded_at"] = datetime.now(timezone.utc)
+    df_raw.to_sql(
+        RAW_TABLE,
+        warehouse_engine,
+        if_exists="replace",
+        index=False,
+        method="multi",
+        chunksize=5000,
+    )
+    logger.info(f"[FRANCE TRAVAIL] {len(df_raw)} lignes chargées dans {RAW_TABLE} (raw, skillwatch_warehouse)")
+    # === FIN RAW LAYER ===
+
+    # === LEGACY : matching + upsert, comportement inchangé ===
     with open(SKILLS_MAPPING_PATH, encoding="utf-8") as f:
         mapping: dict[str, str] = json.load(f)
 
@@ -179,7 +227,7 @@ def run() -> None:
     unmatched_count = 0
     start = time.time()
 
-    with warehouse_engine.connect() as wconn:
+    with legacy_engine.connect() as wconn:
         demo_conn = demo_engine.connect() if demo_engine else None
 
         for offer in unique_offers:
@@ -283,6 +331,7 @@ def run() -> None:
         f"[FRANCE TRAVAIL] Skills matchés: {skills_matched} liaisons | {unmatched_count} non-matchés → data/unmatched.log"
     )
     logger.info(f"[FRANCE TRAVAIL] Upsert terminé | durée: {duration}s")
+    # === FIN LEGACY ===
 
 
 if __name__ == "__main__":
