@@ -119,6 +119,7 @@ just extract
 
 # Extraire une source spécifique
 just extract-france        # France Travail
+just extract-france-skills # Matching skills France Travail (après extract-france, avant dbt run)
 just extract-stackoverflow # Stack Overflow (CSV)
 just extract-spark         # Stack Overflow (Spark)
 just extract-scraping      # OpenClassrooms
@@ -130,6 +131,15 @@ just transform
 # Simuler sans exécution
 uv run main.py --dry-run
 ```
+
+> **Note provisoire (sera réécrite au chapitre 8)** — sur `refacto/dbt-airflow`, le matching
+> skills de France Travail a été extrait dans un script Python séparé et rejouable,
+> `src/extract/match_skills_france_travail.py` (`just extract-france-skills`), car ce
+> matching texte libre n'est pas adapté à du SQL. Il doit tourner **après**
+> `just extract-france` et **avant** `dbt run`/`dbt build` : il alimente
+> `raw_france_travail_skills_matched`, dont dépend le mart `job_offer_skills`. Cet
+> enchaînement n'est pas encore automatisé (pas de DAG Airflow à ce stade) — à exécuter
+> manuellement dans cet ordre.
 
 ---
 

@@ -15,6 +15,11 @@ extract:
 extract-france:
   uv run main.py --step extract --source france_travail
 
+# Matching skills France Travail (network-free, replayable) — à lancer après extract-france,
+# avant tout dbt run/build : alimente raw_france_travail_skills_matched dont dépend job_offer_skills
+extract-france-skills:
+  uv run python -m src.extract.match_skills_france_travail
+
 extract-stackoverflow:
   uv run main.py --step extract --source stackoverflow
 
