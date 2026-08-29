@@ -1,0 +1,453 @@
+alias,canonical_skill
+python,Python
+python3,Python
+py,Python
+sql,SQL
+postgresql,PostgreSQL
+postgres,PostgreSQL
+docker,Docker
+kubernetes,Kubernetes
+k8s,Kubernetes
+aws,AWS
+amazon web services,AWS
+amazon web services (aws),AWS
+azure,Azure
+microsoft azure,Azure
+gcp,GCP
+google cloud,GCP
+react,React
+reactjs,React
+vuejs,Vue
+vue.js,Vue
+javascript,JavaScript
+js,JavaScript
+typescript,TypeScript
+ts,TypeScript
+java,Java
+rust,Rust
+golang,Go
+go lang,Go
+go programming,Go
+php,PHP
+mysql,MySQL
+mongodb,MongoDB
+mongo,MongoDB
+redis,Redis
+elasticsearch,Elasticsearch
+spark,Spark
+apache spark,Spark
+kafka,Kafka
+apache kafka,Kafka
+airflow,Airflow
+tensorflow,TensorFlow
+tf,TensorFlow
+pytorch,PyTorch
+torch,PyTorch
+sklearn,scikit-learn
+scikit-learn,scikit-learn
+pandas,Pandas
+numpy,NumPy
+fastapi,FastAPI
+django,Django
+flask,Flask
+git,Git
+linux,Linux
+ubuntu,Linux
+bash,Bash
+shell,Bash
+bash/shell (all shells),Bash
+powershell,PowerShell
+power bi,Power BI
+powerbi,Power BI
+tableau,Tableau
+dbt,dbt
+mlflow,MLflow
+langchain,LangChain
+hugging face,Hugging Face
+html,HTML/CSS
+css,HTML/CSS
+html/css,HTML/CSS
+dart,Dart
+kotlin,Kotlin
+c language,C
+langage c,C
+c#,C#
+csharp,C#
+c++,C++
+cpp,C++
+delphi,Delphi
+lua,Lua
+vba,VBA
+visual basic (.net),Visual Basic
+visual basic,Visual Basic
+vb.net,Visual Basic
+scala,Scala
+ada language,Ada
+assembly,Assembly
+asm,Assembly
+cobol,COBOL
+elixir,Elixir
+erlang,Erlang
+f#,F#
+fsharp,F#
+fortran,Fortran
+gdscript,GDScript
+groovy,Groovy
+lisp,Lisp
+matlab,MATLAB
+micropython,MicroPython
+ocaml,OCaml
+perl,Perl
+prolog,Prolog
+language r,R
+r programming,R
+rstudio,R
+tidyverse,R
+ruby,Ruby
+swift,Swift
+swiftui,Swift
+zig,Zig
+mojo,Mojo
+gleam,Gleam
+cloud firestore,Firestore
+firestore,Firestore
+dynamodb,DynamoDB
+amazon dynamodb,DynamoDB
+microsoft sql server,SQL Server
+sql server,SQL Server
+mssql,SQL Server
+oracle,Oracle
+oracle db,Oracle
+sqlite,SQLite
+cassandra,Cassandra
+apache cassandra,Cassandra
+databricks sql,Databricks
+databricks,Databricks
+duckdb,DuckDB
+mariadb,MariaDB
+snowflake,Snowflake
+amazon redshift,Redshift
+redshift,Redshift
+h2,H2
+bigquery,BigQuery
+google bigquery,BigQuery
+cosmos db,Cosmos DB
+azure cosmos db,Cosmos DB
+influxdb,InfluxDB
+neo4j,Neo4j
+clickhouse,ClickHouse
+cockroachdb,CockroachDB
+pocketbase,PocketBase
+valkey,Valkey
+supabase,Supabase
+ibm db2,IBM Db2
+db2,IBM Db2
+firebase realtime database,Firebase
+firebase,Firebase
+microsoft access,Microsoft Access
+ms access,Microsoft Access
+datomic,Datomic
+cloudflare,Cloudflare
+gradle,Gradle
+datadog,Datadog
+homebrew,Homebrew
+brew,Homebrew
+maven (build tool),Maven
+maven,Maven
+terraform,Terraform
+npm,npm
+pnpm,pnpm
+gnu make,Make
+makefile,Make
+msbuild,MSBuild
+nuget,NuGet
+pip,pip
+webpack,Webpack
+splunk,Splunk
+bun,Bun
+chocolatey,Chocolatey
+choco,Chocolatey
+digital ocean,DigitalOcean
+digitalocean,DigitalOcean
+netlify,Netlify
+new relic,New Relic
+ninja,Ninja
+podman,Podman
+poetry,Poetry
+prometheus,Prometheus
+railway,Railway
+vercel,Vercel
+vite,Vite
+yandex cloud,Yandex Cloud
+yarn,Yarn
+ansible,Ansible
+heroku,Heroku
+cargo,Cargo
+composer,Composer
+pacman,Pacman
+ibm cloud,IBM Cloud
+spring boot,Spring Boot
+spring framework,Spring Boot
+next.js,Next.js
+nextjs,Next.js
+node.js,Node.js
+nodejs,Node.js
+angular,Angular
+angularjs,Angular
+angular.js,Angular
+asp.net,ASP.NET
+asp.net core,ASP.NET
+aspnet,ASP.NET
+jquery,jQuery
+astro,Astro
+blazor,Blazor
+deno,Deno
+drupal,Drupal
+expressjs,Express
+express.js,Express
+ruby on rails,Ruby on Rails
+rails,Ruby on Rails
+ror,Ruby on Rails
+svelte,Svelte
+sveltekit,Svelte
+symfony,Symfony
+wordpress,WordPress
+axum,Axum
+phoenix,Phoenix
+fastify,Fastify
+nestjs,NestJS
+nest.js,NestJS
+laravel,Laravel
+nuxt.js,Nuxt.js
+nuxt,Nuxt.js
+nuxtjs,Nuxt.js
+sk-learn,scikit-learn
+hugginface,Hugging Face
+postgre,PostgreSQL
+google cloud),GCP
+linux.,Linux
+express,Express
+hadoop,Hadoop
+jupyter,Jupyter
+jupiter,Jupyter
+jupyter notebook,Jupyter
+python (jupyter notebook),Jupyter
+google data studio,Looker Studio
+looker studio,Looker Studio
+data studio,Looker Studio
+microsoft excel,Excel
+excel,Excel
+excel.,Excel
+knime,KNIME
+knime.,KNIME
+r markdown,R Markdown
+rmarkdown,R Markdown
+matplotlib,Matplotlib
+seaborn,Seaborn
+seaborn.,Seaborn
+mistral,Mistral AI
+mistral ai,Mistral AI
+chatgpt,ChatGPT
+computer vision,Computer Vision
+deep learning,Deep Learning
+deep learining,Deep Learning
+mlops,MLOps
+nlp,NLP
+natural language processing,NLP
+librairies python de nlp,NLP
+streamlit,Streamlit
+bentoml,BentoML
+airbyte,Airbyte
+kestra,Kestra
+pyspark,PySpark
+hadoop/pyspark,PySpark
+redpandas,Redpanda
+redpanda,Redpanda
+sass,Sass
+scss,Sass
+redux,Redux
+react & redux,Redux
+tailwind css,Tailwind CSS
+tailwind,Tailwind CSS
+twig,Twig
+doctrine,Doctrine
+.net,.NET
+dotnet,.NET
+.net core,.NET
+.net core mvc,.NET
+linq,LINQ
+django rest,Django REST Framework
+django rest framework,Django REST Framework
+drf,Django REST Framework
+pydantic,Pydantic
+prisma,Prisma
+jetpack compose,Jetpack Compose
+retrofit,Retrofit
+coredata,Core Data
+core data,Core Data
+uikit,UIKit
+junit,JUnit
+xml,XML
+yaml,YAML
+visual studio code,VS Code
+vscode,VS Code
+vs code,VS Code
+visual studio,Visual Studio
+pycharm,PyCharm
+eclipse,Eclipse
+android studio,Android Studio
+xcode,Xcode
+javadoc,Javadoc
+chrome debugger,Chrome DevTools
+chrome devtools,Chrome DevTools
+github,GitHub
+git/github,GitHub
+git & github.,GitHub
+git & github,GitHub
+github.,GitHub
+gitlab,GitLab
+gitlab ci,GitLab CI
+gitlab-ci,GitLab CI
+circleci,CircleCI
+ci/cd,CI/CD
+pipeline ci/cd,CI/CD
+docker-compose,Docker Compose
+docker compose,Docker Compose
+sonarqube,SonarQube
+cypress,Cypress
+automatisation avec cypress,Cypress
+postman,Postman
+pytest,pytest
+jira,Jira
+figma,Figma
+openapi,OpenAPI
+mermaid,Mermaid
+mermaid.,Mermaid
+great-expectations,Great Expectations
+great expectations,Great Expectations
+great_expectations,Great Expectations
+n8n,n8n
+notion,Notion
+miro,Miro
+miro / lucidchart,Miro
+lucidchart,Lucidchart
+weweb,WeWeb
+xano,Xano
+elementor,Elementor
+gutenberg,Gutenberg
+mitre att&ck,MITRE ATT&CK
+mitre attack,MITRE ATT&CK
+mitre d3fend,MITRE D3FEND
+ids/ips,IDS/IPS
+waf,WAF
+waf),WAF
+elk,ELK Stack
+elk stack,ELK Stack
+les outils elk,ELK Stack
+thehive,TheHive
+cortex,Cortex
+wireshark,Wireshark
+wireshark / tshark ou encore n8n,Wireshark
+crowdsec,CrowdSec
+stormshield,Stormshield
+firewall stormshield,Stormshield
+dns,DNS
+vlan,VLAN
+ospf,OSPF
+eigrp,EIGRP
+ipv6,IPv6
+ipsec,IPSec
+ipsec),IPSec
+glpi,GLPI
+nagios,Nagios
+supervision nagios,Nagios
+cisco packet tracer,Cisco Packet Tracer
+packet tracer,Cisco Packet Tracer
+ocs inventory,OCS Inventory
+virtualbox,VirtualBox
+windows,Windows
+windows 10,Windows
+windows 11,Windows
+windows server,Windows Server
+active directory,Active Directory
+react.js,React
+spring,Spring Boot
+bash/shell,Bash
+torch/pytorch,PyTorch
+google cloud platform,GCP
+ibm cloud or watson,IBM Cloud
+hugging face transformers,Hugging Face
+.net core / .net 5,.NET
+.net (5+),.NET
+.net framework,.NET
+.net framework (1.0 - 4.8),.NET
+.net maui,.NET
+llm,LLM
+jwt,JWT
+rest api,REST API
+api rest,REST API
+les api rest,REST API
+uml,UML
+pca,PCA
+clustering,Clustering
+k-means,K-Means
+data quality,Data Quality
+lan,LAN
+tcp/ip,TCP/IP
+veeam backup,Veeam Backup
+vector store,Vector Store
+vector store.,Vector Store
+flutter,Flutter
+react native,React Native
+electron,Electron
+gatsby,Gatsby
+remix,Remix
+htmx,HTMX
+solid.js,Solid.js
+qt,Qt
+ionic,Ionic
+xamarin,Xamarin
+cordova,Cordova
+play framework,Play Framework
+quarkus,Quarkus
+ktor,Ktor
+codeigniter,CodeIgniter
+puppet,Puppet
+chef,Chef
+pulumi,Pulumi
+cmake,CMake
+ant,Ant
+make,Make
+dagger,Dagger
+rabbitmq,RabbitMQ
+vmware,VMware
+openstack,OpenStack
+openshift,OpenShift
+ruff,Ruff
+scaleway,Scaleway
+ovh,OVH
+hetzner,Hetzner
+render,Render
+fly.io,Fly.io
+alibaba cloud,Alibaba Cloud
+oracle cloud infrastructure,Oracle Cloud
+oracle cloud infrastructure (oci),Oracle Cloud
+couchbase,Couchbase
+couchdb,CouchDB
+couch db,CouchDB
+tidb,TiDB
+solr,Solr
+ravendb,RavenDB
+presto,Presto
+eventstoredb,EventStoreDB
+keras,Keras
+cuda,CUDA
+jax,JAX
+opencv,OpenCV
+haskell,Haskell
+clojure,Clojure
+julia,Julia
+objective-c,Objective-C
+sas,SAS
+solidity,Solidity
+nim,Nim

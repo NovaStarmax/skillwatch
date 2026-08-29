@@ -1,0 +1,10 @@
+seeds:
+  - name: departments
+    columns:
+      - name: dep
+        data_tests:
+          - unique
+          - not_null
+      - name: population
+        data_tests:
+          - not_null
