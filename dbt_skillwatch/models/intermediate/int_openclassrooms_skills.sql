@@ -7,6 +7,9 @@ with staged as (
 -- distinct : par précaution, même risque de doublon que sur les sources Stack Overflow
 -- (deux alias bruts différents pour une même formation pouvant pointer vers le même skill
 -- canonique, ex. "angular" + "angularjs" dans deux lignes skill_raw distinctes).
+-- pas de trim(lower()) ici contrairement aux modèles Stack Overflow : skill_raw est déjà
+-- normalisé (strip + lower) côté scraper Python avant écriture en raw, alias du seed est
+-- lui-même en lowercase — la jointure directe est donc correcte, pas un oubli.
 select distinct
     staged.url,
     skills_mapping.canonical_skill

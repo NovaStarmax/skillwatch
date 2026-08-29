@@ -72,7 +72,9 @@ def run() -> None:
         RAW_TABLE,
         warehouse_engine,
         if_exists="replace",
-        index=False
+        index=False,
+        method="multi",
+        chunksize=5000,
     )
     logger.info(f"[STACKOVERFLOW] {len(df_raw)} lignes chargées dans {RAW_TABLE} (raw, skillwatch_warehouse)")
     # === FIN RAW LAYER ===

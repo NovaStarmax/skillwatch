@@ -21,3 +21,16 @@ snapshot-paths: ["snapshots"]
 clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
+
+# Formalise la convention déjà en place : staging/intermediate restent des vues de calcul,
+# marts sont matérialisés en table pour la lecture fréquente. Les marts ont aussi leur
+# config(materialized='table') explicite par fichier ; ce bloc évite qu'un futur modèle
+# retombe silencieusement en view faute de config.
+models:
+  dbt_skillwatch:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      +materialized: table
