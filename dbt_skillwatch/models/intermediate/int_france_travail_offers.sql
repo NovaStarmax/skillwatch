@@ -13,7 +13,11 @@ parsed as (
         substring(staged.commune, 1, 2) as dept_code,
         regexp_match(
             staged.salaire_libelle, '(\d+(?:\.\d+)?)\s*Euros?\s*à\s*(\d+(?:\.\d+)?)'
-        ) as salary_match
+        ) as salary_match,
+        -- mot de période en tête du libellé ("Annuel"/"Mensuel"/"Horaire") : salary_min/max
+        -- ne le distinguent pas (fidèle au legacy), donc sans cette colonne un "2800" mensuel
+        -- et un "45000" annuel sont indiscernables pour qui agrège ces colonnes.
+        regexp_match(staged.salaire_libelle, '^(\w+)') as period_match
     from staged
 
 )
@@ -32,7 +36,8 @@ select
     parsed.contract_type,
     parsed.published_at,
     floor((parsed.salary_match[1])::numeric)::int as salary_min,
-    floor((parsed.salary_match[2])::numeric)::int as salary_max
+    floor((parsed.salary_match[2])::numeric)::int as salary_max,
+    parsed.period_match[1] as salary_period
 from parsed
 left join {{ ref('departments') }} as departments
     on parsed.dept_code = departments.dep

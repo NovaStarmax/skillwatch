@@ -54,3 +54,5 @@ models:
         data_tests:
           - unique
           - not_null
+      - name: salary_period
+        description: Période du salaire tel qu'annoncé par l'offre ("Annuel", "Mensuel" ou "Horaire"), extraite en tête de salaire_libelle. NULL si salary_min/salary_max sont NULL. salary_min/salary_max ne distinguent pas la période (fidèle au legacy) — à croiser avec cette colonne avant tout agrégat.
