@@ -12,6 +12,8 @@ select
     location,
     commune,
     contract_type,
-    published_at,
+    -- format API confirmé ISO 8601 UTC ('2026-08-27T15:59:34.470Z') sur les 514 lignes
+    -- actuelles, sans exception : cast direct, pas besoin de to_timestamp() avec masque.
+    published_at::timestamptz as published_at,
     salaire_libelle
 from source

@@ -54,7 +54,7 @@ models:
           - not_null
 
   - name: stg_france_travail
-    description: Une ligne par offre France Travail déduplicée, colonnes reprises telles quelles depuis raw_france_travail — aucun parsing salaire ni jointure ici.
+    description: Une ligne par offre France Travail déduplicée, colonnes reprises telles quelles depuis raw_france_travail — aucun parsing salaire ni jointure ici. Seule transformation, published_at casté en timestamptz (texte ISO 8601 UTC côté raw).
     columns:
       - name: external_id
         description: Identifiant de l'offre, identifiant logique unique.
