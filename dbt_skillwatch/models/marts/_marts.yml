@@ -18,6 +18,21 @@ models:
         data_tests:
           - not_null
 
+  - name: market_summary
+    description: >
+      Table finale (matérialisée) — une ligne par skill (base : marts.skills, 306 lignes),
+      reproduisant le calcul de src/transform/normalizer.py (legacy skillwatch_db.market_summary).
+      LEFT JOIN partout depuis skills : un skill sans offre/formation/stat doit apparaître
+      avec des 0/NULL, jamais disparaître. developer_usage_count/avg_salary_eur filtrés sur
+      survey_year = 2025 uniquement (archive 2021-2024 intentionnellement exclue, fidèle au
+      legacy). avg_salary_eur applique un taux USD->EUR (0.92) codé en dur hérité du legacy,
+      dette technique documentée en ligne, pas un choix fait ici.
+    columns:
+      - name: skill_name
+        data_tests:
+          - unique
+          - not_null
+
   - name: stackoverflow_skills
     description: >
       Table finale (matérialisée) — une ligne par skill canonique et par année, toutes sources
