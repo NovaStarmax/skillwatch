@@ -1,9 +1,9 @@
-import json
 import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pandas as pd
 from dotenv import load_dotenv
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import avg, col, count, explode, lit, lower, split, trim
@@ -19,7 +19,7 @@ from src.utils.logger import get_logger
 load_dotenv()
 
 ARCHIVE_DIR = ROOT / "data" / "raw" / "stackoverflow_archive"
-SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
+SKILLS_MAPPING_PATH = ROOT / "dbt_skillwatch" / "seeds" / "skills_mapping.csv"
 UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_spark.log"
 RAW_TABLE = "raw_stackoverflow_archive"
 
@@ -62,8 +62,9 @@ def run() -> None:
         sys.exit(1)
 
     # Chargement du mapping skills en mémoire Python
-    with open(SKILLS_MAPPING_PATH, encoding="utf-8") as f:
-        mapping: dict[str, str] = json.load(f)
+    mapping: dict[str, str] = (
+        pd.read_csv(SKILLS_MAPPING_PATH, encoding="utf-8").set_index("alias")["canonical_skill"].to_dict()
+    )
 
     # Init SparkSession
     logger.info("[SPARK] Initialisation SparkSession local[*]")

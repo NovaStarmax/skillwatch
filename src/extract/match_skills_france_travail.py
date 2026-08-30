@@ -1,4 +1,3 @@
-import json
 import re
 import sys
 from datetime import datetime, timezone
@@ -15,7 +14,7 @@ from src.utils.logger import get_logger
 
 load_dotenv()
 
-SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
+SKILLS_MAPPING_PATH = ROOT / "dbt_skillwatch" / "seeds" / "skills_mapping.csv"
 RAW_TABLE = "raw_france_travail"
 MATCHED_TABLE = "raw_france_travail_skills_matched"
 
@@ -30,8 +29,9 @@ def run() -> None:
         logger.error(f"[MATCH FT] WAREHOUSE_DATABASE_URL inaccessible: {e}")
         sys.exit(1)
 
-    with open(SKILLS_MAPPING_PATH, encoding="utf-8") as f:
-        mapping: dict[str, str] = json.load(f)
+    mapping: dict[str, str] = (
+        pd.read_csv(SKILLS_MAPPING_PATH, encoding="utf-8").set_index("alias")["canonical_skill"].to_dict()
+    )
 
     df = pd.read_sql_table(RAW_TABLE, warehouse_engine, schema="raw")
     logger.info(f"[MATCH FT] {len(df)} offres chargées depuis {RAW_TABLE}")

@@ -1,4 +1,3 @@
-import json
 import sys
 import time
 from collections import defaultdict
@@ -19,7 +18,7 @@ load_dotenv()
 
 SURVEY_YEAR = 2025
 DATA_DIR = ROOT / "data" / "raw" / "stackoverflow_latest"
-SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
+SKILLS_MAPPING_PATH = ROOT / "dbt_skillwatch" / "seeds" / "skills_mapping.csv"
 UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_stackoverflow.log"
 RAW_TABLE = "raw_stackoverflow_latest"
 
@@ -41,8 +40,7 @@ def find_csv(logger) -> Path:
 
 
 def load_mapping() -> dict[str, str]:
-    with open(SKILLS_MAPPING_PATH, encoding="utf-8") as f:
-        return json.load(f)
+    return pd.read_csv(SKILLS_MAPPING_PATH, encoding="utf-8").set_index("alias")["canonical_skill"].to_dict()
 
 
 def run() -> None:

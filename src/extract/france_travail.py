@@ -1,4 +1,3 @@
-import json
 import os
 import re
 import sys
@@ -22,7 +21,7 @@ load_dotenv()
 AUTH_URL = "https://entreprise.francetravail.fr/connexion/oauth2/access_token"
 SEARCH_URL = "https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search"
 KEYWORDS = ["data engineer", "data scientist", "développeur python", "machine learning"]
-SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
+SKILLS_MAPPING_PATH = ROOT / "dbt_skillwatch" / "seeds" / "skills_mapping.csv"
 UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_france_travail.log"
 RAW_TABLE = "raw_france_travail"
 
@@ -210,8 +209,9 @@ def run() -> None:
     # === FIN RAW LAYER ===
 
     # === LEGACY : matching + upsert, comportement inchangé ===
-    with open(SKILLS_MAPPING_PATH, encoding="utf-8") as f:
-        mapping: dict[str, str] = json.load(f)
+    mapping: dict[str, str] = (
+        pd.read_csv(SKILLS_MAPPING_PATH, encoding="utf-8").set_index("alias")["canonical_skill"].to_dict()
+    )
 
     UNMATCHED_LOG.parent.mkdir(parents=True, exist_ok=True)
 

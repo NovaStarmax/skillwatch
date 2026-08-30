@@ -1,4 +1,3 @@
-import json
 import re
 import sys
 import time
@@ -20,7 +19,7 @@ load_dotenv()
 
 URL = "https://openclassrooms.com/fr/paths"
 HTML_PATH = ROOT / "data" / "raw" / "scraping" / "openclassrooms.html"
-SKILLS_MAPPING_PATH = ROOT / "config" / "skills_mapping.json"
+SKILLS_MAPPING_PATH = ROOT / "dbt_skillwatch" / "seeds" / "skills_mapping.csv"
 UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_openclassrooms.log"
 RAW_TRAININGS_TABLE = "raw_openclassrooms_trainings"
 RAW_SKILLS_TABLE = "raw_openclassrooms_skills"
@@ -294,8 +293,9 @@ def run() -> None:
         sys.exit(1)
 
     # Chargement du mapping skills
-    with open(SKILLS_MAPPING_PATH, encoding="utf-8") as f:
-        skills_mapping: dict[str, str] = json.load(f)
+    skills_mapping: dict[str, str] = (
+        pd.read_csv(SKILLS_MAPPING_PATH, encoding="utf-8").set_index("alias")["canonical_skill"].to_dict()
+    )
 
     html = fetch_html(HTML_PATH, logger)
     formations = parse_formations(html, logger)
