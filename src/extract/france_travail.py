@@ -1,5 +1,4 @@
 import os
-import re
 import sys
 import time
 from datetime import datetime, timezone
@@ -8,12 +7,11 @@ from pathlib import Path
 import pandas as pd
 import requests
 from dotenv import load_dotenv
-from sqlalchemy import text
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.utils.db import get_demographics_engine, get_engine, get_warehouse_engine, replace_raw_table
+from src.utils.db import get_warehouse_engine, replace_raw_table
 from src.utils.logger import get_logger
 
 load_dotenv()
@@ -21,8 +19,6 @@ load_dotenv()
 AUTH_URL = "https://entreprise.francetravail.fr/connexion/oauth2/access_token"
 SEARCH_URL = "https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search"
 KEYWORDS = ["data engineer", "data scientist", "développeur python", "machine learning"]
-SKILLS_MAPPING_PATH = ROOT / "dbt_skillwatch" / "seeds" / "skills_mapping.csv"
-UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_france_travail.log"
 RAW_TABLE = "raw_france_travail"
 
 _token: str | None = None
@@ -92,46 +88,6 @@ def fetch_offers(keyword: str, logger) -> list[dict]:
     return []
 
 
-# === LEGACY : pipeline de démo existant (parsing salaire, enrichissement démographique,
-# matching skills, upsert job_offers/skills/job_offer_skills dans skillwatch_db).
-# Conservé tel quel, tourne en parallèle du raw layer — comme pour les 3 sources précédentes.
-def parse_salary(libelle: str | None) -> tuple[int | None, int | None]:
-    if not libelle:
-        return None, None
-    match = re.search(r"(\d+(?:\.\d+)?)\s*Euros?\s*à\s*(\d+(?:\.\d+)?)", libelle)
-    if match:
-        return int(float(match.group(1))), int(float(match.group(2)))
-    return None, None
-
-
-def get_dept_population(dept_code: str, demo_conn) -> int | None:
-    try:
-        row = demo_conn.execute(
-            text("SELECT population FROM departments WHERE dep = :dep"),
-            {"dep": dept_code},
-        ).fetchone()
-        return row[0] if row else None
-    except Exception:
-        return None
-
-
-def upsert_skill(canonical: str, conn) -> int | None:
-    conn.execute(
-        text("""
-            INSERT INTO skills (name, category)
-            VALUES (:name, 'unknown')
-            ON CONFLICT (name) DO NOTHING
-        """),
-        {"name": canonical},
-    )
-    row = conn.execute(
-        text("SELECT id FROM skills WHERE name = :name"),
-        {"name": canonical},
-    ).fetchone()
-    return row[0] if row else None
-# === FIN LEGACY (fonctions) ===
-
-
 def run() -> None:
     logger = get_logger("france_travail")
 
@@ -142,24 +98,6 @@ def run() -> None:
     except Exception as e:
         logger.error(f"[FRANCE TRAVAIL] WAREHOUSE_DATABASE_URL inaccessible: {e}")
         sys.exit(1)
-
-    # Connexion legacy skillwatch_db (obligatoire, pipeline de démo)
-    try:
-        legacy_engine = get_engine()
-        legacy_engine.connect().close()
-    except Exception as e:
-        logger.error(f"[FRANCE TRAVAIL] DATABASE_URL inaccessible: {e}")
-        sys.exit(1)
-
-    # Connexion demographics (optionnelle, legacy)
-    demo_engine = None
-    try:
-        demo_engine = get_demographics_engine()
-        demo_engine.connect().close()
-    except Exception as e:
-        logger.warning(
-            f"[FRANCE TRAVAIL] DEMOGRAPHICS_URL inaccessible: {e} → enrichissement désactivé"
-        )
 
     # Auth
     authenticate(logger)
@@ -183,7 +121,7 @@ def run() -> None:
     )
 
     # === RAW LAYER : écriture brute, sans parsing salaire ni matching skills ===
-    # Écrit dans skillwatch_warehouse (WAREHOUSE_DATABASE_URL), pas dans skillwatch_db.
+    # Écrit dans skillwatch_warehouse (WAREHOUSE_DATABASE_URL).
     raw_rows = []
     for offer in unique_offers:
         lieu = offer.get("lieuTravail") or {}
@@ -207,124 +145,6 @@ def run() -> None:
     replace_raw_table(warehouse_engine, RAW_TABLE, df_raw)
     logger.info(f"[FRANCE TRAVAIL] {len(df_raw)} lignes chargées dans {RAW_TABLE} (raw, skillwatch_warehouse)")
     # === FIN RAW LAYER ===
-
-    # === LEGACY : matching + upsert, comportement inchangé ===
-    mapping: dict[str, str] = (
-        pd.read_csv(SKILLS_MAPPING_PATH, encoding="utf-8").set_index("alias")["canonical_skill"].to_dict()
-    )
-
-    UNMATCHED_LOG.parent.mkdir(parents=True, exist_ok=True)
-
-    enriched_count = 0
-    skills_matched = 0
-    unmatched_count = 0
-    start = time.time()
-
-    with legacy_engine.connect() as wconn:
-        demo_conn = demo_engine.connect() if demo_engine else None
-
-        for offer in unique_offers:
-            external_id = offer.get("id")
-            title = offer.get("intitule", "") or ""
-            description = offer.get("description", "") or ""
-            company = offer.get("entreprise", {}).get("nom")
-            lieu = offer.get("lieuTravail", {})
-            location = lieu.get("libelle")
-            commune = lieu.get("commune") or ""
-            dept_code = commune[:2] if commune else None
-            contract_type = offer.get("typeContrat")
-            published_at = offer.get("dateCreation")
-
-            # Enrichissement démographique
-            dept_population = None
-            if demo_conn and dept_code:
-                dept_population = get_dept_population(dept_code, demo_conn)
-                if dept_population is not None:
-                    enriched_count += 1
-
-            # Parsing salaire
-            salary_libelle = (offer.get("salaire") or {}).get("libelle")
-            salary_min, salary_max = parse_salary(salary_libelle)
-
-            # Upsert job_offer
-            row = wconn.execute(
-                text("""
-                    INSERT INTO job_offers (
-                        external_id, title, company, location,
-                        dept_code, dept_population,
-                        salary_min, salary_max,
-                        contract_type, source, published_at
-                    ) VALUES (
-                        :external_id, :title, :company, :location,
-                        :dept_code, :dept_population,
-                        :salary_min, :salary_max,
-                        :contract_type, 'france_travail', :published_at
-                    )
-                    ON CONFLICT (external_id) DO UPDATE SET
-                        title = EXCLUDED.title,
-                        dept_population = EXCLUDED.dept_population,
-                        salary_min = EXCLUDED.salary_min,
-                        salary_max = EXCLUDED.salary_max
-                    RETURNING id
-                """),
-                {
-                    "external_id": external_id,
-                    "title": title,
-                    "company": company,
-                    "location": location,
-                    "dept_code": dept_code,
-                    "dept_population": dept_population,
-                    "salary_min": salary_min,
-                    "salary_max": salary_max,
-                    "contract_type": contract_type,
-                    "published_at": published_at,
-                },
-            ).fetchone()
-            job_offer_id = row[0]
-
-            # Matching skills
-            offer_text = f"{title} {description}".lower()
-            offer_tokens = set(re.split(r'[\s\-/;,.()\[\]]+', offer_text))
-            matched: list[str] = []
-            for alias, canonical in mapping.items():
-                # Single-word aliases: token exact match; multi-word: substring (preserves "spring boot" etc.)
-                hit = alias in offer_tokens if " " not in alias else alias in offer_text
-                if hit and canonical not in matched:
-                    matched.append(canonical)
-
-            if matched:
-                for canonical in matched:
-                    skill_id = upsert_skill(canonical, wconn)
-                    if skill_id:
-                        wconn.execute(
-                            text("""
-                                INSERT INTO job_offer_skills (job_offer_id, skill_id)
-                                VALUES (:job_offer_id, :skill_id)
-                                ON CONFLICT DO NOTHING
-                            """),
-                            {"job_offer_id": job_offer_id, "skill_id": skill_id},
-                        )
-                        skills_matched += 1
-            else:
-                unmatched_count += 1
-                with open(UNMATCHED_LOG, "a", encoding="utf-8") as f:
-                    f.write(
-                        f"[UNMATCHED] source: france_travail | offre: {external_id} | title: {title}\n"
-                    )
-
-        wconn.commit()
-        if demo_conn:
-            demo_conn.close()
-
-    duration = round(time.time() - start, 1)
-    logger.info(
-        f"[FRANCE TRAVAIL] Enrichissement démographique: {enriched_count}/{len(unique_offers)} offres enrichies"
-    )
-    logger.info(
-        f"[FRANCE TRAVAIL] Skills matchés: {skills_matched} liaisons | {unmatched_count} non-matchés → data/unmatched.log"
-    )
-    logger.info(f"[FRANCE TRAVAIL] Upsert terminé | durée: {duration}s")
-    # === FIN LEGACY ===
 
 
 if __name__ == "__main__":

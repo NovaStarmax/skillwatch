@@ -7,20 +7,17 @@ from pathlib import Path
 import pandas as pd
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from sqlalchemy import text
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.utils.db import get_engine, get_warehouse_engine, replace_raw_table
+from src.utils.db import get_warehouse_engine, replace_raw_table
 from src.utils.logger import get_logger
 
 load_dotenv()
 
 URL = "https://openclassrooms.com/fr/paths"
 HTML_PATH = ROOT / "data" / "raw" / "scraping" / "openclassrooms.html"
-SKILLS_MAPPING_PATH = ROOT / "dbt_skillwatch" / "seeds" / "skills_mapping.csv"
-UNMATCHED_LOG = ROOT / "data" / "logs" / "unmatched_openclassrooms.log"
 RAW_TRAININGS_TABLE = "raw_openclassrooms_trainings"
 RAW_SKILLS_TABLE = "raw_openclassrooms_skills"
 
@@ -259,43 +256,8 @@ def extract_skills_from_detail(html: str, slug: str, logger) -> list[str]:
     return normalized_skills
 
 
-def match_skills(
-    skills_raw: list[str], skills_mapping: dict[str, str], slug: str, logger
-) -> list[str]:
-    matched = []
-    unmatched = []
-    for normalized in skills_raw:
-        if normalized in skills_mapping:
-            canonical = skills_mapping[normalized]
-            if canonical not in matched:
-                matched.append(canonical)
-        else:
-            unmatched.append(normalized)
-
-    if unmatched:
-        with open(UNMATCHED_LOG, "a", encoding="utf-8") as f:
-            for u in unmatched:
-                f.write(f"[UNMATCHED] source: openclassrooms_detail | slug: {slug} | value: {u}\n")
-        logger.warning(f"[SCRAPING] {len(unmatched)} tags non reconnus pour {slug} → unmatched.log")
-
-    return matched
-
-
 def run() -> None:
     logger = get_logger("scraping")
-
-    # Connexion warehouse
-    try:
-        engine = get_engine()
-        engine.connect().close()
-    except Exception as e:
-        logger.error(f"[SCRAPING] DATABASE_URL inaccessible: {e}")
-        sys.exit(1)
-
-    # Chargement du mapping skills
-    skills_mapping: dict[str, str] = (
-        pd.read_csv(SKILLS_MAPPING_PATH, encoding="utf-8").set_index("alias")["canonical_skill"].to_dict()
-    )
 
     html = fetch_html(HTML_PATH, logger)
     formations = parse_formations(html, logger)
@@ -303,7 +265,6 @@ def run() -> None:
     # --- Phase 1 : scraping des pages détail ---
     logger.info(f"[SCRAPING] Début scraping détails | {len(formations)} formations à traiter")
     formation_skills_raw: dict[str, list[str]] = {}
-    formation_skills_matched: dict[str, list[str]] = {}
     detail_real = 0
 
     for formation in formations:
@@ -312,7 +273,6 @@ def run() -> None:
         detail_html = fetch_detail_html(url, slug, logger)
         skills_raw = extract_skills_from_detail(detail_html, slug, logger)
         formation_skills_raw[url] = skills_raw
-        formation_skills_matched[url] = match_skills(skills_raw, skills_mapping, slug, logger)
         if skills_raw:
             detail_real += 1
 
@@ -322,7 +282,7 @@ def run() -> None:
     )
 
     # === RAW LAYER : formations quasi brutes + couples (url, skill_raw), sans matching ===
-    # Écrit dans skillwatch_warehouse (WAREHOUSE_DATABASE_URL), pas dans skillwatch_db.
+    # Écrit dans skillwatch_warehouse (WAREHOUSE_DATABASE_URL).
     warehouse_engine = get_warehouse_engine()
 
     df_trainings = pd.DataFrame(formations)
@@ -340,88 +300,6 @@ def run() -> None:
     replace_raw_table(warehouse_engine, RAW_SKILLS_TABLE, df_skills)
     logger.info(f"[SCRAPING] {len(df_skills)} lignes chargées dans {RAW_SKILLS_TABLE} (raw, skillwatch_warehouse)")
     # === FIN RAW LAYER ===
-
-    # --- Phase 2 : upsert ---
-    matched_count = 0
-    unmatched_count = 0
-    training_count = 0
-    skill_links = 0
-    start = time.time()
-
-    with engine.connect() as conn:
-        for formation in formations:
-            if not formation.get("url"):
-                continue
-
-            # Upsert training
-            row = conn.execute(
-                text("""
-                    INSERT INTO trainings (title, domain, level, duration_months, provider, url)
-                    VALUES (:title, :domain, :level, :duration_months, :provider, :url)
-                    ON CONFLICT (url) DO UPDATE SET
-                        title = EXCLUDED.title,
-                        domain = EXCLUDED.domain,
-                        level = EXCLUDED.level,
-                        duration_months = EXCLUDED.duration_months
-                    RETURNING id
-                """),
-                {
-                    "title": formation["title"],
-                    "domain": formation["domain"],
-                    "level": formation["level"],
-                    "duration_months": formation["duration_months"],
-                    "provider": formation["provider"],
-                    "url": formation["url"],
-                },
-            ).fetchone()
-
-            if not row:
-                continue
-            training_id = row[0]
-            training_count += 1
-
-            # Skills : depuis scraping détail uniquement
-            skills = formation_skills_matched.get(formation["url"]) or []
-            if not skills:
-                logger.warning(f"[SCRAPING] Aucun skill trouvé pour: {formation['title']}")
-                unmatched_count += 1
-                continue
-
-            matched_count += 1
-            for skill_name in skills:
-                conn.execute(
-                    text("""
-                        INSERT INTO skills (name, category)
-                        VALUES (:name, 'unknown')
-                        ON CONFLICT (name) DO NOTHING
-                    """),
-                    {"name": skill_name},
-                )
-                skill_row = conn.execute(
-                    text("SELECT id FROM skills WHERE name = :name"),
-                    {"name": skill_name},
-                ).fetchone()
-                if not skill_row:
-                    continue
-
-                conn.execute(
-                    text("""
-                        INSERT INTO training_skills (training_id, skill_id)
-                        VALUES (:training_id, :skill_id)
-                        ON CONFLICT DO NOTHING
-                    """),
-                    {"training_id": training_id, "skill_id": skill_row[0]},
-                )
-                skill_links += 1
-
-        conn.commit()
-
-    duration = round(time.time() - start, 1)
-    logger.info(f"[SCRAPING] {matched_count} formations avec skills insérés en base")
-    logger.info(f"[SCRAPING] {unmatched_count} formations sans skill détecté")
-    logger.info(
-        f"[SCRAPING] Upsert terminé | {training_count} trainings | {skill_links} liaisons | durée: {duration}s"
-    )
 
 
 if __name__ == "__main__":
