@@ -1,6 +1,23 @@
 version: 2
 
 models:
+  - name: skills
+    description: >
+      Table finale (matérialisée) — dimension skill : une ligne par canonical_skill distinct
+      toutes sources confondues (union de stackoverflow_skills, training_skills,
+      job_offer_skills), enrichie de sa catégorie (seed skills_categories, 'unknown' si
+      absente). Remplace le rôle de skillwatch_db.skills.category côté legacy.
+    columns:
+      - name: skill_name
+        description: Nom canonique du skill, union distincte des 3 marts sources.
+        data_tests:
+          - unique
+          - not_null
+      - name: category
+        description: Catégorie du skill (seed skills_categories), 'unknown' si non répertorié.
+        data_tests:
+          - not_null
+
   - name: stackoverflow_skills
     description: >
       Table finale (matérialisée) — une ligne par skill canonique et par année, toutes sources
@@ -18,6 +35,10 @@ models:
         description: Nom canonique du skill (colonne skills_mapping.canonical_skill).
         data_tests:
           - not_null
+          - relationships:
+              arguments:
+                to: ref('skills')
+                field: skill_name
       - name: survey_year
         description: Année de l'enquête (2021 à 2025).
         data_tests:
@@ -57,6 +78,10 @@ models:
         description: Nom canonique du skill (colonne skills_mapping.canonical_skill).
         data_tests:
           - not_null
+          - relationships:
+              arguments:
+                to: ref('skills')
+                field: skill_name
 
   - name: job_offers
     description: Table finale (matérialisée) — une ligne par offre France Travail, reprend int_france_travail_offers tel quel. Équivalent du schéma legacy job_offers (skillwatch_db, filtré sur source = 'france_travail').
@@ -84,3 +109,7 @@ models:
         description: Nom canonique du skill déjà matché.
         data_tests:
           - not_null
+          - relationships:
+              arguments:
+                to: ref('skills')
+                field: skill_name

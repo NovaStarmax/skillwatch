@@ -1,0 +1,309 @@
+skill_name,category
+.NET,framework
+Active Directory,tool
+Airbyte,bigdata
+Airflow,bigdata
+Alibaba Cloud,cloud
+Android Studio,tool
+Angular,framework
+Ansible,devops
+Ant,tool
+ASP.NET,framework
+Assembly,language
+Astro,framework
+AWS,cloud
+Axum,framework
+Azure,cloud
+Bash,language
+BentoML,ml
+BigQuery,database
+Blazor,framework
+Bun,tool
+C,language
+C#,language
+C++,language
+Cargo,tool
+Cassandra,database
+ChatGPT,ml
+Chef,devops
+Chocolatey,tool
+Chrome DevTools,tool
+CI/CD,devops
+CircleCI,devops
+Cisco Packet Tracer,tool
+ClickHouse,database
+Clojure,language
+Cloudflare,cloud
+Clustering,ml
+CMake,tool
+COBOL,language
+CockroachDB,database
+CodeIgniter,framework
+Composer,tool
+Computer Vision,ml
+Cordova,framework
+Core Data,framework
+Cortex,tool
+Cosmos DB,database
+Couchbase,database
+CouchDB,database
+CrowdSec,tool
+CUDA,ml
+Cypress,tool
+Dagger,devops
+Dart,language
+Data Quality,tool
+Databricks,bigdata
+Datadog,devops
+Datomic,database
+dbt,tool
+Deep Learning,ml
+Delphi,language
+Deno,tool
+DigitalOcean,cloud
+Django,framework
+Django REST Framework,framework
+DNS,tool
+Docker,devops
+Docker Compose,devops
+Doctrine,framework
+Drupal,framework
+DuckDB,database
+DynamoDB,database
+Eclipse,tool
+EIGRP,tool
+Elasticsearch,database
+Electron,framework
+Elementor,tool
+Elixir,language
+ELK Stack,tool
+Erlang,language
+EventStoreDB,database
+Excel,tool
+Express,framework
+F#,language
+FastAPI,framework
+Fastify,framework
+Figma,tool
+Firebase,database
+Firestore,database
+Flask,framework
+Flutter,framework
+Fly.io,cloud
+Fortran,language
+Gatsby,framework
+GCP,cloud
+GDScript,language
+Git,tool
+GitHub,devops
+GitLab,devops
+GitLab CI,devops
+Gleam,language
+GLPI,tool
+Go,language
+Gradle,tool
+Great Expectations,tool
+Groovy,language
+Gutenberg,tool
+H2,database
+Hadoop,bigdata
+Haskell,language
+Heroku,cloud
+Hetzner,cloud
+Homebrew,tool
+HTML/CSS,language
+HTMX,framework
+Hugging Face,ml
+IBM Cloud,cloud
+IBM Db2,database
+IDS/IPS,tool
+InfluxDB,database
+Ionic,framework
+IPSec,tool
+IPv6,tool
+Java,language
+Javadoc,tool
+JavaScript,language
+JAX,ml
+Jetpack Compose,framework
+Jira,tool
+jQuery,framework
+Julia,language
+JUnit,framework
+Jupyter,tool
+JWT,tool
+K-Means,ml
+Kafka,bigdata
+Keras,ml
+Kestra,bigdata
+KNIME,tool
+Kotlin,language
+Ktor,framework
+Kubernetes,devops
+LAN,tool
+LangChain,ml
+Laravel,framework
+LINQ,framework
+Linux,devops
+Lisp,language
+LLM,ml
+Looker Studio,tool
+Lua,language
+Lucidchart,tool
+Make,tool
+MariaDB,database
+MATLAB,language
+Matplotlib,ml
+Maven,tool
+Mermaid,tool
+MicroPython,language
+Microsoft Access,database
+Miro,tool
+Mistral AI,ml
+MITRE ATT&CK,tool
+MITRE D3FEND,tool
+MLflow,ml
+MLOps,ml
+Mojo,language
+MongoDB,database
+MSBuild,tool
+MySQL,database
+n8n,tool
+Nagios,tool
+Neo4j,database
+NestJS,framework
+Netlify,cloud
+New Relic,devops
+Next.js,framework
+Nim,language
+Ninja,tool
+NLP,ml
+Node.js,framework
+Notion,tool
+npm,tool
+NuGet,tool
+NumPy,ml
+Nuxt.js,framework
+Objective-C,language
+OCaml,language
+OCS Inventory,tool
+OpenAPI,tool
+OpenCV,ml
+OpenShift,devops
+OpenStack,cloud
+Oracle,database
+Oracle Cloud,cloud
+OSPF,tool
+OVH,cloud
+Pacman,tool
+Pandas,ml
+PCA,ml
+Perl,language
+Phoenix,framework
+PHP,language
+Pip,tool
+pip,tool
+Play Framework,framework
+pnpm,tool
+PocketBase,database
+Podman,devops
+Poetry,tool
+PostgreSQL,database
+Postman,tool
+Power BI,tool
+PowerShell,language
+Presto,database
+Prisma,framework
+Prolog,language
+Prometheus,devops
+Pulumi,devops
+Puppet,devops
+PyCharm,tool
+Pydantic,framework
+PySpark,bigdata
+pytest,tool
+Python,language
+PyTorch,ml
+Qt,framework
+Quarkus,framework
+R,language
+R Markdown,tool
+RabbitMQ,tool
+Railway,cloud
+RavenDB,database
+React,framework
+React Native,framework
+Redis,database
+Redpanda,bigdata
+Redshift,database
+Redux,framework
+Remix,framework
+Render,cloud
+REST API,tool
+Retrofit,framework
+Ruby,language
+Ruby on Rails,framework
+Ruff,tool
+Rust,language
+SAS,language
+Sass,framework
+Scala,language
+Scaleway,cloud
+scikit-learn,ml
+Seaborn,ml
+Snowflake,database
+Solid.js,framework
+Solidity,language
+Solr,database
+SonarQube,devops
+Spark,bigdata
+Splunk,devops
+Spring Boot,framework
+SQL,language
+SQL Server,database
+SQLite,database
+Stormshield,tool
+Streamlit,ml
+Supabase,database
+Svelte,framework
+Swift,language
+Symfony,framework
+Tableau,tool
+Tailwind CSS,framework
+TCP/IP,tool
+TensorFlow,ml
+Terraform,devops
+TheHive,tool
+TiDB,database
+Twig,framework
+TypeScript,language
+UIKit,framework
+UML,tool
+Valkey,database
+VBA,language
+Vector Store,tool
+Veeam Backup,tool
+Vercel,cloud
+VirtualBox,tool
+Visual Basic,language
+Visual Studio,tool
+Vite,tool
+VLAN,tool
+VMware,tool
+VS Code,tool
+Vue,framework
+WAF,tool
+Webpack,tool
+WeWeb,tool
+Windows,tool
+Windows Server,tool
+Wireshark,tool
+WordPress,framework
+Xamarin,framework
+Xano,tool
+Xcode,tool
+XML,language
+YAML,language
+Yandex Cloud,cloud
+Yarn,tool
+Zig,language

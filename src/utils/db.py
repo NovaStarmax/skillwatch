@@ -1,5 +1,4 @@
 import os
-from contextlib import contextmanager
 
 import pandas as pd
 from psycopg2 import errors as psycopg2_errors
@@ -27,28 +26,6 @@ def get_warehouse_engine() -> Engine:
     if not warehouse_url:
         raise ValueError("WAREHOUSE_DATABASE_URL is not set")
     return create_engine(warehouse_url)
-
-
-@contextmanager
-def get_connection():
-    engine = get_engine()
-    connection = engine.connect()
-    try:
-        yield connection
-    finally:
-        connection.close()
-        engine.dispose()
-
-
-@contextmanager
-def get_demographics_connection():
-    engine = get_demographics_engine()
-    connection = engine.connect()
-    try:
-        yield connection
-    finally:
-        connection.close()
-        engine.dispose()
 
 
 def replace_raw_table(engine: Engine, table_name: str, df: pd.DataFrame, schema: str = "raw") -> None:
@@ -81,13 +58,3 @@ def replace_raw_table(engine: Engine, table_name: str, df: pd.DataFrame, schema:
             chunksize=5000,
         )
 
-
-@contextmanager
-def get_warehouse_connection():
-    engine = get_warehouse_engine()
-    connection = engine.connect()
-    try:
-        yield connection
-    finally:
-        connection.close()
-        engine.dispose()

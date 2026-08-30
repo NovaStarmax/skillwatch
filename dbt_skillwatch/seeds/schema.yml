@@ -19,3 +19,20 @@ seeds:
       - name: canonical_skill
         data_tests:
           - not_null
+
+  - name: skills_categories
+    description: >
+      Taxonomie manuelle skill → catégorie (308 associations), portée depuis l'ancien
+      sql/seed_skill_categories.sql (legacy skillwatch_db.skills.category). Deux noms
+      (Databricks, Git) apparaissaient dans deux UPDATE successifs avec des catégories
+      différentes dans le fichier source ; la catégorie retenue ici est celle du dernier
+      UPDATE (sémantique reproduite : bigdata et tool respectivement), comme l'aurait
+      produit l'exécution séquentielle du script SQL d'origine.
+    columns:
+      - name: skill_name
+        data_tests:
+          - unique
+          - not_null
+      - name: category
+        data_tests:
+          - not_null
