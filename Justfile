@@ -46,11 +46,14 @@ db-check:
   docker compose exec postgres_warehouse psql -U skillwatch -d skillwatch_db -c "\dt"
 
 # Crée skillwatch_warehouse (raw/staging/marts dbt) — Postgres n'a pas de CREATE DATABASE IF NOT EXISTS, on tolère l'erreur si elle existe déjà
+# app.users (auth API) vit dans skillwatch_warehouse mais hors dbt (state OLTP, pas analytique) — schema_app.sql, pas un modèle/seed dbt
 db-init-warehouse:
   docker compose exec -T postgres_warehouse psql \
     -U skillwatch -d skillwatch_db -c "CREATE DATABASE skillwatch_warehouse;" 2>/dev/null || true
   docker compose exec -T postgres_warehouse psql \
     -U skillwatch -d skillwatch_warehouse -c "CREATE SCHEMA IF NOT EXISTS raw;"
+  docker compose exec -T postgres_warehouse psql \
+    -U skillwatch -d skillwatch_warehouse < sql/schema_app.sql
   echo "Base skillwatch_warehouse prête"
 
 # Initialise les bases de données depuis zéro

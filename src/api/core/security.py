@@ -8,7 +8,7 @@ from jose import JWTError, jwt
 from sqlalchemy import text
 
 from src.api.core.config import JWT_ALGORITHM, JWT_EXPIRE_MINUTES, JWT_SECRET_KEY
-from src.utils.db import get_engine
+from src.utils.db import get_warehouse_engine
 
 ph = PasswordHasher()
 bearer_scheme = HTTPBearer()
@@ -45,10 +45,10 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer_
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    engine = get_engine()
+    engine = get_warehouse_engine()
     with engine.connect() as conn:
         row = conn.execute(
-            text("SELECT id, username FROM users WHERE username = :u"),
+            text("SELECT id, username FROM app.users WHERE username = :u"),
             {"u": username},
         ).fetchone()
     if not row:
