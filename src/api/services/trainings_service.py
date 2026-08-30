@@ -1,12 +1,12 @@
 from sqlalchemy import text
 
 from src.api.schemas.trainings import Training
-from src.utils.db import get_engine
+from src.utils.db import get_warehouse_engine
 
 _TRAINING_SELECT = """
     SELECT t.title, t.domain, t.level,
            t.duration_months, t.provider, t.url
-    FROM trainings t
+    FROM marts.trainings t
 """
 
 
@@ -18,7 +18,7 @@ def _row_to_training(r) -> Training:
 
 
 def list_trainings() -> list[Training]:
-    engine = get_engine()
+    engine = get_warehouse_engine()
     with engine.connect() as conn:
         rows = conn.execute(
             text(_TRAINING_SELECT + " ORDER BY t.domain, t.title")
@@ -27,16 +27,15 @@ def list_trainings() -> list[Training]:
 
 
 def trainings_by_skill(skill_name: str) -> list[Training]:
-    engine = get_engine()
+    engine = get_warehouse_engine()
     with engine.connect() as conn:
         rows = conn.execute(
             text("""
                 SELECT t.title, t.domain, t.level,
                        t.duration_months, t.provider, t.url
-                FROM trainings t
-                JOIN training_skills ts ON ts.training_id = t.id
-                JOIN skills s ON s.id = ts.skill_id
-                WHERE s.name ILIKE :skill_name
+                FROM marts.trainings t
+                JOIN marts.training_skills ts ON ts.url = t.url
+                WHERE ts.canonical_skill ILIKE :skill_name
                 ORDER BY t.domain
             """),
             {"skill_name": skill_name},

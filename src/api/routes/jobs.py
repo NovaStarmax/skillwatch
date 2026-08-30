@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import text
 
 from src.api.core.security import get_current_user
-from src.utils.db import get_engine
+from src.utils.db import get_warehouse_engine
 
 router = APIRouter()
 
@@ -27,16 +27,15 @@ def get_jobs(
         SELECT DISTINCT jo.external_id, jo.title, jo.company,
                jo.location, jo.dept_code, jo.dept_population,
                jo.salary_min, jo.salary_max,
-               jo.contract_type, jo.source, jo.published_at
-        FROM job_offers jo
+               jo.contract_type, 'france_travail' AS source, jo.published_at
+        FROM marts.job_offers jo
     """
     params = {"limit": limit}
 
     if skill:
         query += """
-        JOIN job_offer_skills jos ON jo.id = jos.job_offer_id
-        JOIN skills s ON s.id = jos.skill_id
-        WHERE s.name ILIKE :skill
+        JOIN marts.job_offer_skills jos ON jo.external_id = jos.external_id
+        WHERE jos.canonical_skill ILIKE :skill
         """
         params["skill"] = skill
 
@@ -49,7 +48,7 @@ def get_jobs(
 
     query += " ORDER BY jo.published_at DESC NULLS LAST LIMIT :limit"
 
-    with get_engine().connect() as conn:
+    with get_warehouse_engine().connect() as conn:
         rows = conn.execute(text(query), params).fetchall()
 
     return [dict(row._mapping) for row in rows]

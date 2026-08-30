@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy import text
 
 from src.api.core.security import get_current_user
-from src.utils.db import get_engine
+from src.utils.db import get_warehouse_engine
 
 router = APIRouter()
 
@@ -23,29 +23,29 @@ def get_stats(
 ):
     if skill:
         query = """
-            SELECT s.name, s.category,
-                   ss.year, ss.usage_count,
+            SELECT sk.skill_name AS name, sk.category,
+                   ss.survey_year AS year, ss.usage_count,
                    ROUND(ss.avg_salary_usd) as avg_salary_usd
-            FROM survey_stats ss
-            JOIN skills s ON ss.skill_id = s.id
-            WHERE s.name ILIKE :skill
-            ORDER BY ss.year
+            FROM marts.stackoverflow_skills ss
+            JOIN marts.skills sk ON sk.skill_name = ss.canonical_skill
+            WHERE ss.canonical_skill ILIKE :skill
+            ORDER BY ss.survey_year
         """
         params = {"skill": skill}
     else:
         query = """
-            SELECT s.name, s.category,
-                   ss.year, ss.usage_count,
+            SELECT sk.skill_name AS name, sk.category,
+                   ss.survey_year AS year, ss.usage_count,
                    ROUND(ss.avg_salary_usd) as avg_salary_usd
-            FROM survey_stats ss
-            JOIN skills s ON ss.skill_id = s.id
-            WHERE ss.year = 2025
+            FROM marts.stackoverflow_skills ss
+            JOIN marts.skills sk ON sk.skill_name = ss.canonical_skill
+            WHERE ss.survey_year = 2025
             ORDER BY ss.usage_count DESC
             LIMIT 50
         """
         params = {}
 
-    with get_engine().connect() as conn:
+    with get_warehouse_engine().connect() as conn:
         rows = conn.execute(text(query), params).fetchall()
 
     return [dict(row._mapping) for row in rows]

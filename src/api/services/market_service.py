@@ -1,19 +1,19 @@
 from sqlalchemy import text
 
 from src.api.schemas.market import DepartmentStats, MarketSummaryItem
-from src.utils.db import get_demographics_engine, get_engine
+from src.utils.db import get_warehouse_engine
 
 
 def market_summary() -> list[MarketSummaryItem]:
-    engine = get_engine()
+    engine = get_warehouse_engine()
     with engine.connect() as conn:
         rows = conn.execute(text("""
-            SELECT s.name, s.category,
+            SELECT sk.skill_name, sk.category,
                    ms.job_offer_count, ms.developer_usage_count,
                    ms.avg_salary_eur, ms.training_count,
                    ms.top_dept, ms.top_dept_name, ms.top_dept_population
-            FROM market_summary ms
-            JOIN skills s ON s.id = ms.skill_id
+            FROM marts.market_summary ms
+            JOIN marts.skills sk ON sk.skill_name = ms.skill_name
             WHERE ms.job_offer_count > 0
             ORDER BY ms.job_offer_count DESC
             LIMIT 20
@@ -33,37 +33,26 @@ def market_summary() -> list[MarketSummaryItem]:
 
 
 def by_department() -> list[DepartmentStats]:
-    warehouse_engine = get_engine()
-    with warehouse_engine.connect() as conn:
-        job_rows = conn.execute(text("""
-            SELECT dept_code, COUNT(*) AS job_count
-            FROM job_offers
-            WHERE dept_code IS NOT NULL
-            GROUP BY dept_code
+    engine = get_warehouse_engine()
+    with engine.connect() as conn:
+        rows = conn.execute(text("""
+            SELECT jo.dept_code, d.nom AS dept_name, d.population, COUNT(*) AS job_count
+            FROM marts.job_offers jo
+            JOIN public.departments d ON jo.dept_code = d.dep
+            WHERE jo.dept_code IS NOT NULL
+              AND d.population IS NOT NULL AND d.population > 0
+            GROUP BY jo.dept_code, d.nom, d.population
             ORDER BY job_count DESC
             LIMIT 20
         """)).fetchall()
 
-    demo_engine = get_demographics_engine()
-    with demo_engine.connect() as conn:
-        dept_rows = conn.execute(text("""
-            SELECT dep, nom, population
-            FROM departments
-            WHERE population IS NOT NULL AND population > 0
-        """)).fetchall()
-
-    dept_map = {r[0]: (r[1], r[2]) for r in dept_rows}
-
-    result = []
-    for row in job_rows:
-        dept_code, job_count = row[0], int(row[1])
-        if dept_code in dept_map:
-            dept_name, population = dept_map[dept_code]
-            result.append(DepartmentStats(
-                dept_code=dept_code,
-                dept_name=dept_name,
-                population=population,
-                job_count=job_count,
-                jobs_per_million_hab=round(job_count * 1_000_000 / population, 2),
-            ))
-    return result
+    return [
+        DepartmentStats(
+            dept_code=r[0],
+            dept_name=r[1],
+            population=r[2],
+            job_count=int(r[3]),
+            jobs_per_million_hab=round(int(r[3]) * 1_000_000 / r[2], 2),
+        )
+        for r in rows
+    ]
