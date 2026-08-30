@@ -11,22 +11,23 @@ SkillWatch agrège des données issues de 5 sources hétérogènes pour répondr
 ┌─────────────────────────────────────────────────────┐
 │                    EXTRACT                          │
 │  France Travail API  ·  Stack Overflow CSV (Spark)  │
-│  OpenClassrooms (Playwright)  ·  INSEE (SQL dump)   │
+│  OpenClassrooms (Playwright)                        │
+│  → écriture brute dans skillwatch_warehouse.raw.*   │
 └────────────────────────┬────────────────────────────┘
                          │
                          ▼
 ┌─────────────────────────────────────────────────────┐
-│                   TRANSFORM                         │
-│  Normalisation · Dédoublonnage · skills_mapping     │
-│  Calcul market_summary · Enrichissement géo         │
+│              TRANSFORM (dbt_skillwatch)             │
+│  staging → intermediate → marts                     │
+│  seeds : departments (INSEE) · skills_categories    │
+│  · skills_mapping                                   │
 └────────────────────────┬────────────────────────────┘
                          │
-              ┌──────────┴──────────┐
-              ▼                     ▼
-  skillwatch_db (5432)    demographics_db (5433)
-  Base analytique         Données INSEE
-              │
-              ▼
+                         ▼
+        skillwatch_warehouse (5432, un seul Postgres)
+        raw · public (seeds) · marts · app (auth)
+                         │
+                         ▼
 ┌─────────────────────────────────────────────────────┐
 │                     API REST                        │
 │  FastAPI · JWT · /docs (Swagger)  :8000             │
@@ -40,7 +41,7 @@ SkillWatch agrège des données issues de 5 sources hétérogènes pour répondr
 | France Travail | API REST (OAuth2) | Offres d'emploi tech en temps réel |
 | Stack Overflow | Archives CSV traitées via Apache Spark | Enquêtes développeurs 2021–2025 |
 | OpenClassrooms | Scraping Playwright | ~80 parcours de formation tech |
-| INSEE | Dump SQL | Population par département |
+| INSEE | Seed dbt (`departments.csv`) | Population par département |
 
 ---
 
@@ -72,23 +73,28 @@ uv sync
 # 4. Installer Playwright (scraping OpenClassrooms)
 uv run playwright install chromium
 
-# 5. Démarrer les bases de données et Spark
-docker compose up -d postgres_warehouse postgres_demographics spark
+# 5. Démarrer PostgreSQL
+docker compose up -d postgres_warehouse
 
-# 6. Initialiser les bases de données
+# 6. Initialiser skillwatch_warehouse (schémas raw/app + seeds dbt)
 just db-init
 
-# 7. Lancer le pipeline ETL
-just pipeline
+# 7. Lancer l'extraction (raw layer)
+just extract
+just extract-france-skills  # matching skills France Travail, après extract-france
 
-# 8. Démarrer l'API
+# 8. Transformer avec dbt (staging → intermediate → marts)
+just transform
+
+# 9. Démarrer l'API
 just api
 # → http://localhost:8000
 # → http://localhost:8000/docs
 ```
 
 Note : l'API tourne en local via just api.
-Docker gère uniquement PostgreSQL et Spark.
+Docker gère uniquement PostgreSQL. Spark (`stackoverflow_spark.py`) tourne en local[*]
+dans le process Python, sans conteneur dédié.
 
 ---
 
@@ -98,8 +104,8 @@ Copier `.env.example` → `.env` et renseigner :
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | URL PostgreSQL warehouse (skillwatch_db, port 5432) |
-| `DEMOGRAPHICS_URL` | URL PostgreSQL demographics (demographics_db, port 5433) |
+| `DATABASE_URL` | URL PostgreSQL legacy (skillwatch_db, port 5432) — conservée le temps du décommissionnement complet, plus utilisée par le code applicatif |
+| `WAREHOUSE_DATABASE_URL` | URL PostgreSQL warehouse (skillwatch_warehouse, port 5432) — raw/staging/marts dbt + `app.users` (auth) |
 | `FRANCE_TRAVAIL_CLIENT_ID` | Client ID API France Travail |
 | `FRANCE_TRAVAIL_CLIENT_SECRET` | Client Secret API France Travail |
 | `JWT_SECRET_KEY` | Clé secrète pour la signature des tokens JWT |
@@ -108,29 +114,31 @@ Copier `.env.example` → `.env` et renseigner :
 
 ---
 
-## Pipeline ETL
+## Pipeline ETL/ELT
 
 ```bash
-# Lancer le pipeline complet (extract → transform)
-just pipeline
-
-# Extraire toutes les sources
+# Extraire toutes les sources (raw layer, skillwatch_warehouse.raw.*)
 just extract
 
 # Extraire une source spécifique
 just extract-france        # France Travail
-just extract-france-skills # Matching skills France Travail (après extract-france, avant dbt run)
+just extract-france-skills # Matching skills France Travail (après extract-france, avant dbt)
 just extract-stackoverflow # Stack Overflow (CSV)
 just extract-spark         # Stack Overflow (Spark)
 just extract-scraping      # OpenClassrooms
-just extract-demographics  # INSEE
 
-# Transformer les données (normalisation + market_summary)
+# Transformer les données (dbt : staging → intermediate → marts)
 just transform
 
-# Simuler sans exécution
+# Charger uniquement les seeds (departments, skills_categories, skills_mapping)
+just dbt-seed
+
+# Simuler l'extraction sans exécution
 uv run main.py --dry-run
 ```
+
+`just pipeline` (`uv run main.py`) n'exécute que l'extraction — la transformation est
+désormais entièrement portée par dbt (`just transform`), un outil séparé de `main.py`.
 
 > **Note provisoire (sera réécrite au chapitre 8)** — sur `refacto/dbt-airflow`, le matching
 > skills de France Travail a été extrait dans un script Python séparé et rejouable,
@@ -189,30 +197,32 @@ Voir [docs/openapi.md](docs/openapi.md) pour la référence complète avec exemp
 
 ```
 skillwatch/
-├── main.py                     # CLI pipeline (--step, --source, --dry-run)
+├── main.py                     # CLI extraction (--step, --source, --dry-run)
 ├── Justfile                    # Task runner
-├── docker-compose.yml          # PostgreSQL x2 + Spark + API
-├── config/
-│   └── skills_mapping.json     # ~450 aliases → canonicals
+├── docker-compose.yml          # PostgreSQL (warehouse)
 ├── sql/
-│   ├── schema_warehouse.sql    # Schéma skillwatch_db
-│   ├── schema_demographics.sql # Schéma demographics_db
-│   ├── demographics_dump.sql   # Données INSEE
-│   └── seed_skill_categories.sql
+│   └── schema_app.sql          # app.users (auth API), hors dbt — état OLTP
+├── dbt_skillwatch/             # Transform : staging → intermediate → marts
+│   ├── models/
+│   │   ├── staging/            # Vues, nettoyage léger depuis raw.*
+│   │   ├── intermediate/       # Vues, logique métier
+│   │   └── marts/              # Tables matérialisées (skills, market_summary, ...)
+│   └── seeds/
+│       ├── departments.csv     # Population INSEE par département
+│       ├── skills_categories.csv
+│       └── skills_mapping.csv  # ~450 aliases → canonicals
 ├── src/
 │   ├── extract/
-│   │   ├── france_travail.py   # API REST France Travail
-│   │   ├── stackoverflow_latest.py  # CSV Stack Overflow
-│   │   ├── stackoverflow_spark.py   # Archives SO via Spark
-│   │   ├── openclassrooms.py   # Scraping Playwright
-│   │   └── demographics.py     # Import INSEE
-│   ├── transform/
-│   │   └── normalizer.py       # Normalisation + market_summary
+│   │   ├── france_travail.py   # API REST France Travail → raw.*
+│   │   ├── stackoverflow_latest.py  # CSV Stack Overflow → raw.*
+│   │   ├── stackoverflow_spark.py   # Archives SO via Spark → raw.*
+│   │   ├── openclassrooms.py   # Scraping Playwright → raw.*
+│   │   └── match_skills_france_travail.py  # Matching skills France Travail (network-free)
 │   ├── api/
 │   │   ├── main.py             # Application FastAPI
-│   │   ├── routes/             # auth, skills, market, trainings
+│   │   ├── routes/             # auth, skills, market, trainings, jobs, stats
 │   │   ├── schemas/            # Modèles Pydantic
-│   │   ├── services/           # Requêtes SQL
+│   │   ├── services/           # Requêtes SQL (skillwatch_warehouse)
 │   │   └── core/               # Config, sécurité JWT
 │   └── utils/
 │       ├── db.py               # Moteurs SQLAlchemy
@@ -237,5 +247,5 @@ just db-reset
 
 | Instance | Port | Base | Contenu |
 |----------|------|------|---------|
-| postgres_warehouse | 5432 | skillwatch_db | Données analytiques (skills, offres, formations, market_summary) |
-| postgres_demographics | 5433 | demographics_db | Population par département INSEE |
+| postgres_warehouse | 5432 | skillwatch_warehouse | `raw.*` (extraction brute) · `public.*` (seeds dbt) · `marts.*` (skills, market_summary, ...) · `app.*` (auth API) |
+| postgres_warehouse | 5432 | skillwatch_db | Legacy, conservée jusqu'au décommissionnement complet — plus utilisée par le code applicatif |
