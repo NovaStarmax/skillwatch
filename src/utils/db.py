@@ -7,20 +7,6 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import ProgrammingError
 
 
-def get_engine() -> Engine:
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        raise ValueError("DATABASE_URL is not set")
-    return create_engine(database_url)
-
-
-def get_demographics_engine() -> Engine:
-    demographics_url = os.getenv("DEMOGRAPHICS_URL")
-    if not demographics_url:
-        raise ValueError("DEMOGRAPHICS_URL is not set")
-    return create_engine(demographics_url)
-
-
 def get_warehouse_engine() -> Engine:
     warehouse_url = os.getenv("WAREHOUSE_DATABASE_URL")
     if not warehouse_url:
