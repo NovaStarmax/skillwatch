@@ -29,46 +29,45 @@ extract-spark:
 extract-scraping:
   uv run main.py --step extract --source openclassrooms
 
-extract-demographics:
-  uv run main.py --step extract --source demographics
+# dbt seed (charge departments/skills_categories/skills_mapping dans public)
+dbt-seed:
+  cd dbt_skillwatch && uv run dbt seed
 
-# Transform
+# Transform : staging → intermediate → marts (dbt), remplace l'ancien normalizer.py
 transform:
-  uv run main.py --step transform
+  cd dbt_skillwatch && uv run dbt build
 
 # Lance l'API
 api:
   uv run uvicorn src.api.main:app --reload --port 8000
 
 
-# Vérifie la DB
+# Vérifie la DB (skillwatch_warehouse : raw/public/marts/app)
 db-check:
-  docker compose exec postgres_warehouse psql -U skillwatch -d skillwatch_db -c "\dt"
+  docker compose exec postgres_warehouse psql -U skillwatch -d skillwatch_warehouse -c "\dt raw.*" -c "\dt public.*" -c "\dt marts.*" -c "\dt app.*"
 
-# Crée skillwatch_warehouse (raw/staging/marts dbt) — Postgres n'a pas de CREATE DATABASE IF NOT EXISTS, on tolère l'erreur si elle existe déjà
+# Crée skillwatch_warehouse (raw/staging/marts dbt) — connexion d'ancrage sur la base admin
+# "postgres" (toujours présente nativement), pas sur une base "legacy" utilisée comme simple
+# point de connexion technique. Postgres n'a pas de CREATE DATABASE IF NOT EXISTS, on tolère
+# l'erreur si elle existe déjà.
 # app.users (auth API) vit dans skillwatch_warehouse mais hors dbt (state OLTP, pas analytique) — schema_app.sql, pas un modèle/seed dbt
 db-init-warehouse:
   docker compose exec -T postgres_warehouse psql \
-    -U skillwatch -d skillwatch_db -c "CREATE DATABASE skillwatch_warehouse;" 2>/dev/null || true
+    -U skillwatch -d postgres -c "CREATE DATABASE skillwatch_warehouse;" 2>/dev/null || true
   docker compose exec -T postgres_warehouse psql \
     -U skillwatch -d skillwatch_warehouse -c "CREATE SCHEMA IF NOT EXISTS raw;"
   docker compose exec -T postgres_warehouse psql \
     -U skillwatch -d skillwatch_warehouse < sql/schema_app.sql
   echo "Base skillwatch_warehouse prête"
 
-# Initialise les bases de données depuis zéro
+# Initialise les bases de données depuis zéro (schéma + seeds dbt, plus de schema_warehouse.sql/schema_demographics.sql)
 db-init: db-init-warehouse
-  docker compose exec -T postgres_warehouse psql \
-    -U skillwatch -d skillwatch_db < sql/schema_warehouse.sql
-  docker compose exec -T postgres_demographics psql \
-    -U skillwatch -d demographics_db < sql/schema_demographics.sql
-  docker compose exec -T postgres_demographics psql \
-    -U skillwatch -d demographics_db < sql/demographics_dump.sql
+  just dbt-seed
   echo "Bases initialisées"
 
 # Réinitialise complètement les bases (supprime tout)
 db-reset:
   docker compose down -v
-  docker compose up -d postgres_warehouse postgres_demographics
+  docker compose up -d postgres_warehouse
   sleep 5
   just db-init
