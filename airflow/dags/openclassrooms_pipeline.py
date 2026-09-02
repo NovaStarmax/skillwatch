@@ -3,8 +3,7 @@ from datetime import datetime
 from airflow.sdk import dag
 from airflow.providers.standard.operators.bash import BashOperator
 
-PROJECT_DIR = "/opt/airflow/project"
-DBT_PROJECT_DIR = "/opt/airflow/project/dbt_skillwatch"
+from common import PROJECT_DIR, DBT_PROJECT_DIR
 
 
 @dag(
