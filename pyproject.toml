@@ -4,24 +4,37 @@ version = "0.1.0"
 description = "Observatoire du Marché de l'Emploi Data & IA"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
+dependencies = []
+
+[dependency-groups]
+# Sert le serveur FastAPI (src/api/) — jamais nécessaire dans le conteneur Airflow.
+api = [
     "fastapi",
     "uvicorn[standard]",
     "sqlalchemy",
     "psycopg2-binary",
     "pydantic-settings",
+    "python-jose[cryptography]",
+    "argon2-cffi",
+    "python-multipart",
+]
+# Sert les extracteurs (src/extract/) et dbt — c'est le seul groupe exporté pour l'image Airflow
+# (voir airflow/requirements.txt, généré via `uv export --only-group pipeline`).
+pipeline = [
+    "sqlalchemy",
+    "psycopg2-binary",
     "pyspark==3.5.0",
     "requests",
     "beautifulsoup4",
     "pandas",
-    "python-jose[cryptography]",
-    "argon2-cffi",
-    "python-multipart",
     "python-dotenv",
     "playwright>=1.60.0",
     "dbt-postgres>=1.11.0",
     "setuptools>=84.0.0",
 ]
+
+[tool.uv]
+default-groups = ["api", "pipeline"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

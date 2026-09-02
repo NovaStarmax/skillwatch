@@ -1626,43 +1626,55 @@ wheels = [
 name = "skillwatch"
 version = "0.1.0"
 source = { editable = "." }
-dependencies = [
+
+[package.dev-dependencies]
+api = [
     { name = "argon2-cffi" },
-    { name = "beautifulsoup4" },
-    { name = "dbt-postgres" },
     { name = "fastapi" },
-    { name = "pandas" },
-    { name = "playwright" },
     { name = "psycopg2-binary" },
     { name = "pydantic-settings" },
-    { name = "pyspark" },
-    { name = "python-dotenv" },
     { name = "python-jose", extra = ["cryptography"] },
     { name = "python-multipart" },
-    { name = "requests" },
-    { name = "setuptools" },
     { name = "sqlalchemy" },
     { name = "uvicorn", extra = ["standard"] },
 ]
+pipeline = [
+    { name = "beautifulsoup4" },
+    { name = "dbt-postgres" },
+    { name = "pandas" },
+    { name = "playwright" },
+    { name = "psycopg2-binary" },
+    { name = "pyspark" },
+    { name = "python-dotenv" },
+    { name = "requests" },
+    { name = "setuptools" },
+    { name = "sqlalchemy" },
+]
 
 [package.metadata]
-requires-dist = [
+
+[package.metadata.requires-dev]
+api = [
     { name = "argon2-cffi" },
+    { name = "fastapi" },
+    { name = "psycopg2-binary" },
+    { name = "pydantic-settings" },
+    { name = "python-jose", extras = ["cryptography"] },
+    { name = "python-multipart" },
+    { name = "sqlalchemy" },
+    { name = "uvicorn", extras = ["standard"] },
+]
+pipeline = [
     { name = "beautifulsoup4" },
     { name = "dbt-postgres", specifier = ">=1.11.0" },
-    { name = "fastapi" },
     { name = "pandas" },
     { name = "playwright", specifier = ">=1.60.0" },
     { name = "psycopg2-binary" },
-    { name = "pydantic-settings" },
     { name = "pyspark", specifier = "==3.5.0" },
     { name = "python-dotenv" },
-    { name = "python-jose", extras = ["cryptography"] },
-    { name = "python-multipart" },
     { name = "requests" },
     { name = "setuptools", specifier = ">=84.0.0" },
     { name = "sqlalchemy" },
-    { name = "uvicorn", extras = ["standard"] },
 ]
 
 [[package]]

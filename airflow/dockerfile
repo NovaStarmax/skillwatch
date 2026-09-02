@@ -1,3 +1,12 @@
 FROM apache/airflow:3.3.1
 COPY requirements.txt /requirements.txt
 RUN pip install --no-cache-dir -r /requirements.txt
+
+# apache/airflow:3.3.1 embarque nativement fastapi==0.137.0 + starlette==1.3.1, une combinaison
+# incompatible avec cadwyn (versioning d'API interne de l'apiserver) qui casse toute exécution de
+# tâche (500 sur PATCH /execution/task-instances/{id}/run). Les constraints officielles actuelles
+# de la branche 3.3.1 épinglent fastapi==0.136.3 / starlette==1.5.0 : on réaligne explicitement
+# dessus, l'image publiée étant visiblement en retard sur ces constraints.
+# TODO: au prochain upgrade de l'image apache/airflow (ex. 3.3.2, cf. PR apache/airflow#68403),
+# retester sans ce pin — le décalage constraints/image publiée peut avoir été corrigé upstream.
+RUN pip install --no-cache-dir "fastapi==0.136.3" "starlette==1.5.0"
