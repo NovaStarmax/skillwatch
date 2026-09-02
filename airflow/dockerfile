@@ -1,4 +1,17 @@
 FROM apache/airflow:3.3.1
+
+# pyspark (extracteur stackoverflow_spark) pilote une vraie JVM en sous-main via py4j : sans JRE,
+# le gateway Java ne démarre pas (JAVA_GATEWAY_EXITED). procps fournit `ps`, utilisé par le script
+# de démarrage de pyspark pour sonder la mémoire dispo — absent de l'image de base, juste un warning
+# sinon, mais autant l'installer tant qu'on touche à apt.
+USER root
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends default-jre-headless procps \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+ENV JAVA_HOME=/usr/lib/jvm/default-java
+USER airflow
+
 COPY requirements.txt /requirements.txt
 RUN pip install --no-cache-dir -r /requirements.txt
 
