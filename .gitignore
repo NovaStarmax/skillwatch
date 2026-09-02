@@ -15,3 +15,6 @@ data/logs/
 !data/logs/.gitkeep
 
 backup_*.sql
+
+airflow/logs/
+airflow/config/airflow.cfg
